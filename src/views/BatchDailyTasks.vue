@@ -93,6 +93,19 @@
               </template>
               设置
             </n-button>
+            <n-button @click="exportAllData" type="warning" size="medium">
+              导出配置
+            </n-button>
+            <n-button @click="triggerImport" type="success" size="medium">
+              导入配置
+            </n-button>
+            <input
+              ref="importFileInput"
+              type="file"
+              accept=".json"
+              style="display: none"
+              @change="importAllData"
+            />
           </div>
         </div>
 
@@ -1905,6 +1918,9 @@ const tokenStatus = ref({}); // { tokenId: 'waiting' | 'running' | 'completed' |
 const isRunning = ref(false);
 const shouldStop = ref(false);
 
+// Import/Export functionality
+const importFileInput = ref(null);
+
 // Settings Modal State
 const showSettingsModal = ref(false);
 const currentSettingsTokenId = ref(null);
@@ -2033,6 +2049,198 @@ const saveBatchSettings = () => {
 const openBatchSettings = () => {
   loadBatchSettings();
   showBatchSettingsModal.value = true;
+};
+
+// ======================
+// Import/Export Functions
+// ======================
+
+// 导出所有配置数据为 JSON 文件
+const exportAllData = () => {
+  try {
+    const exportData = {
+      version: "1.0",
+      exportTime: new Date().toISOString(),
+      exportBy: "xyzw_web_helper",
+      data: {
+        scheduledTasks: JSON.parse(localStorage.getItem("scheduledTasks") || "[]"),
+        taskTemplates: JSON.parse(localStorage.getItem("task-templates") || "[]"),
+        batchSettings: JSON.parse(localStorage.getItem("batchSettings") || "{}"),
+        // 导出所有账号的日常任务设置
+        accountSettings: (() => {
+          const settings = {};
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith("daily-settings:")) {
+              const tokenId = key.replace("daily-settings:", "");
+              settings[tokenId] = JSON.parse(localStorage.getItem(key));
+            }
+          }
+          return settings;
+        })(),
+      }
+    };
+
+    // 创建并下载 JSON 文件
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `xyzw-tasks-backup-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    message.success("配置已成功导出");
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: "=== 成功导出所有配置数据 ===",
+      type: "success",
+    });
+  } catch (error) {
+    console.error("导出配置失败:", error);
+    message.error(`导出失败: ${error.message}`);
+    addLog({
+      time: new Date().toLocaleTimeString(),
+      message: `=== 导出配置失败: ${error.message} ===`,
+      type: "error",
+    });
+  }
+};
+
+// 触发导入文件选择
+const triggerImport = () => {
+  importFileInput.value?.click();
+};
+
+// 导入配置数据
+const importAllData = async (event) => {
+  try {
+    const file = event.target.files?.[0];
+    if (!file) {
+      message.warning("未选择文件");
+      return;
+    }
+
+    // 文件类型验证
+    if (!file.type.includes("json") && !file.name.endsWith(".json")) {
+      message.error("请选择有效的 JSON 文件");
+      return;
+    }
+
+    // 读取文件
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result;
+        if (!content) {
+          message.error("文件读取失败");
+          return;
+        }
+
+        const importedData = JSON.parse(content);
+
+        // 版本检查
+        if (!importedData.version || importedData.version !== "1.0") {
+          const shouldContinue = await new Promise((resolve) => {
+            window.$dialog?.confirm({
+              title: "警告",
+              content: "导入的文件版本可能不兼容，是否继续?",
+              positiveText: "继续",
+              negativeText: "取消",
+              onPositiveClick: () => resolve(true),
+              onNegativeClick: () => resolve(false),
+            });
+          });
+          if (!shouldContinue) return;
+        }
+
+        // 数据验证
+        if (!importedData.data) {
+          message.error("导入文件格式无效，缺少 data 字段");
+          return;
+        }
+
+        // 显示导入确认弹窗
+        const shouldImport = await new Promise((resolve) => {
+          window.$dialog?.confirm({
+            title: "确认导入",
+            content: `即将导入以下配置:\n- 定时任务: ${importedData.data.scheduledTasks?.length || 0} 个\n- 任务模板: ${importedData.data.taskTemplates?.length || 0} 个\n- 账号设置: ${Object.keys(importedData.data.accountSettings || {}).length} 个\n\n此操作将覆盖现有配置，是否继续?`,
+            positiveText: "导入",
+            negativeText: "取消",
+            onPositiveClick: () => resolve(true),
+            onNegativeClick: () => resolve(false),
+          });
+        });
+
+        if (!shouldImport) {
+          message.info("已取消导入");
+          return;
+        }
+
+        // 执行导入
+        if (importedData.data.scheduledTasks && Array.isArray(importedData.data.scheduledTasks)) {
+          localStorage.setItem(
+            "scheduledTasks",
+            JSON.stringify(importedData.data.scheduledTasks)
+          );
+        }
+
+        if (importedData.data.taskTemplates && Array.isArray(importedData.data.taskTemplates)) {
+          localStorage.setItem(
+            "task-templates",
+            JSON.stringify(importedData.data.taskTemplates)
+          );
+        }
+
+        if (importedData.data.batchSettings && typeof importedData.data.batchSettings === "object") {
+          localStorage.setItem(
+            "batchSettings",
+            JSON.stringify(importedData.data.batchSettings)
+          );
+        }
+
+        if (importedData.data.accountSettings && typeof importedData.data.accountSettings === "object") {
+          Object.entries(importedData.data.accountSettings).forEach(([tokenId, settings]) => {
+            localStorage.setItem(
+              `daily-settings:${tokenId}`,
+              JSON.stringify(settings)
+            );
+          });
+        }
+
+        message.success("配置已成功导入，页面将在 2 秒后自动刷新");
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== 成功导入配置数据 (${new Date(importedData.exportTime).toLocaleString()}) ===`,
+          type: "success",
+        });
+
+        // 2 秒后刷新页面以加载新的配置
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } catch (error) {
+        console.error("导入配置失败:", error);
+        message.error(`导入失败: ${error.message}`);
+        addLog({
+          time: new Date().toLocaleTimeString(),
+          message: `=== 导入配置失败: ${error.message} ===`,
+          type: "error",
+        });
+      }
+    };
+
+    reader.readAsText(file);
+
+    // 重置文件输入
+    event.target.value = "";
+  } catch (error) {
+    console.error("导入处理异常:", error);
+    message.error(`操作失败: ${error.message}`);
+  }
 };
 
 // Load settings on component mount
