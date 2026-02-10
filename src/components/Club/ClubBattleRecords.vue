@@ -569,6 +569,15 @@ const exportToImage = async () => {
         console.error('导出失败：', err);
         message.error('导出图片失败，请重试');
       }
+}
+
+// 关闭弹窗
+const handleClose = () => {
+  expandedMembers.value.clear()
+}
+
+// 暴露方法给父组件
+defineExpose({
   fetchBattleRecords
 })
 
