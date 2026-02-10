@@ -4,64 +4,24 @@
       <!-- Left Column -->
       <div class="left-column">
         <!-- Header -->
-        <div
-          class="page-header"
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-          "
-        >
-          <div style="display: flex; align-items: center; gap: 16px">
-            <h2>批量日常任务</h2>
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 8px 12px;
-                background-color: #f8f9fa;
-                border-radius: 8px;
-                border: 1px solid #e9ecef;
-              "
-            >
-              <div style="font-size: 14px; color: #495057">
-                共 {{ scheduledTasks.length }} 个定时任务
+        <div class="page-header">
+          <!-- 左侧标题和定时任务信息 -->
+          <div class="header-left">
+            <h2 style="margin: 0">批量日常任务</h2>
+            <div class="task-status-info">
+              <div class="task-count">
+                共 <strong>{{ scheduledTasks.length }}</strong> 个定时任务
               </div>
-              <div
-                v-if="shortestCountdownTask"
-                style="font-size: 14px; font-weight: 500; color: #1677ff"
-              >
-                即将执行：{{ shortestCountdownTask.task.name }} ({{
-                  shortestCountdownTask.countdown.formatted
-                }})
+              <div v-if="shortestCountdownTask" class="task-countdown">
+                即将: <strong>{{ shortestCountdownTask.task.name }}</strong> 
+                <span style="color: #1677ff">({{ shortestCountdownTask.countdown.formatted }})</span>
               </div>
-              <div v-else style="font-size: 14px; color: #6c757d">
-                暂无定时任务
-              </div>
-              <div style="display: flex; gap: 8px">
-                <n-button type="primary" size="small" @click="openTaskModal">
-                  新增定时任务
-                </n-button>
-                <n-button size="small" @click="showTasksModal = true">
-                  查看定时任务
-                </n-button>
-              </div>
+              <div v-else class="task-countdown-empty">暂无定时任务</div>
             </div>
           </div>
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              padding: 8px 12px;
-              background-color: #f8f9fa;
-              border-radius: 8px;
-              border: 1px solid #e9ecef;
-            "
-          >
+
+          <!-- 快速操作按钮 -->
+          <div class="header-quick-actions">
             <n-button
               type="primary"
               @click="startBatch"
@@ -78,27 +38,24 @@
             >
               停止
             </n-button>
-            <n-button
-              @click="openTemplateManagerModal"
-              type="info"
-              size="medium"
+          </div>
+
+          <!-- 设置菜单按钮 -->
+          <div class="header-menu-actions">
+            <n-dropdown
+              trigger="click"
+              :options="[
+                { label: '任务模板', key: 'templates' },
+                { label: '全局设置', key: 'settings' },
+                { label: '导出配置', key: 'export' },
+                { label: '导入配置', key: 'import' }
+              ]"
+              @select="handleHeaderMenuSelect"
             >
-              任务模板
-            </n-button>
-            <n-button @click="openBatchSettings" type="default" size="medium">
-              <template #icon>
-                <n-icon>
-                  <Settings />
-                </n-icon>
-              </template>
-              设置
-            </n-button>
-            <n-button @click="exportAllData" type="warning" size="medium">
-              导出配置
-            </n-button>
-            <n-button @click="triggerImport" type="success" size="medium">
-              导入配置
-            </n-button>
+              <n-button type="info" size="medium">
+                更多 ⬇
+              </n-button>
+            </n-dropdown>
             <input
               ref="importFileInput"
               type="file"
@@ -111,7 +68,202 @@
 
         <!-- Token Selection -->
         <n-card title="账号列表" class="token-list-card">
+          <div class="quick-action-tabs">
+            <div class="tab-group daily-tasks">
+              <div class="tab-label">日常</div>
+              <n-space wrap style="margin: 0">
+                <n-button
+                  size="small"
+                  @click="startBatch"
+                  :disabled="isRunning || selectedTokens.length === 0"
+                >
+                  日常任务
+                </n-button>
+                <n-button
+                  size="small"
+                  @click="claimHangUpRewards"
+                  :disabled="isRunning || selectedTokens.length === 0"
+                >
+                  领取挂机
+                </n-button>
+                <n-button
+                  size="small"
+                  @click="batchAddHangUpTime"
+                  :disabled="isRunning || selectedTokens.length === 0"
+                >
+                  一键加钟
+                </n-button>
+              </n-space>
+            </div>
+
+            <div class="tab-group features">
+              <div class="tab-label">功能</div>
+              <n-space wrap style="margin: 0">
+                <n-button
+                  size="small"
+                  @click="climbTower"
+                  :disabled="isRunning || selectedTokens.length === 0"
+                >
+                  爬塔
+                </n-button>
+                <n-button
+                  size="small"
+                  @click="batchStudy"
+                  :disabled="isRunning || selectedTokens.length === 0"
+                >
+                  答题
+                </n-button>
+                <n-button
+                  size="small"
+                  @click="batchSmartSendCar"
+                  :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen"
+                >
+                  发车
+                </n-button>
+                <n-button
+                  size="small"
+                  @click="batchClaimCars"
+                  :disabled="isRunning || selectedTokens.length === 0 || !isCarActivityOpen"
+                >
+                  收车
+                </n-button>
+              </n-space>
+            </div>
+
+            <n-collapse
+              accordion
+              trigger-areas="['arrow', 'extra']"
+              style="margin-top: 12px"
+            >
+              <n-collapse-item title="更多功能" name="more-features">
+                <div class="more-features-grid">
+                  <n-space wrap style="margin: 0">
+                    <n-button size="small" @click="resetBottles" :disabled="isRunning || selectedTokens.length === 0">重置罐子</n-button>
+                    <n-button size="small" @click="batchlingguanzi" :disabled="isRunning || selectedTokens.length === 0">领取罐子</n-button>
+                    <n-button size="small" @click="climbWeirdTower" :disabled="isRunning || selectedTokens.length === 0 || !isWeirdTowerActivityOpen">爬怪异塔</n-button>
+                    <n-button size="small" @click="openHelperModal('box')" :disabled="isRunning || selectedTokens.length === 0">开宝箱</n-button>
+                    <n-button size="small" @click="openHelperModal('fish')" :disabled="isRunning || selectedTokens.length === 0">钓鱼</n-button>
+                    <n-button size="small" @click="openHelperModal('recruit')" :disabled="isRunning || selectedTokens.length === 0">招募</n-button>
+                    <n-button size="small" @click="batchbaoku13" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">宝库1-3</n-button>
+                    <n-button size="small" @click="batchbaoku45" :disabled="isRunning || selectedTokens.length === 0 || !isbaokuActivityOpen">宝库4-5</n-button>
+                    <n-button size="small" @click="batchmengjing" :disabled="isRunning || selectedTokens.length === 0 || !ismengjingActivityOpen">梦境</n-button>
+                    <n-button size="small" @click="batchclubsign" :disabled="isRunning || selectedTokens.length === 0">俱乐部签到</n-button>
+                    <n-button size="small" @click="batcharenafight" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">竞技场</n-button>
+                    <n-button size="small" @click="batchClaimBoxPointReward" :disabled="isRunning || selectedTokens.length === 0">宝箱积分</n-button>
+                    <n-button size="small" @click="batchTopUpFish" :disabled="isRunning || selectedTokens.length === 0">钓鱼补齐</n-button>
+                    <n-button size="small" @click="batchTopUpArena" :disabled="isRunning || selectedTokens.length === 0 || !isarenaActivityOpen">竞技场补齐</n-button>
+                    <n-button size="small" @click="batchClaimFreeEnergy" :disabled="isRunning || selectedTokens.length === 0 || !isWeirdTowerActivityOpen">免费道具</n-button>
+                    <n-button size="small" @click="legion_storebuygoods" :disabled="isRunning || selectedTokens.length === 0">买四圣碎片</n-button>
+                    <n-button size="small" @click="legionStoreBuySkinCoins" :disabled="isRunning || selectedTokens.length === 0">买皮肤币</n-button>
+                    <n-button size="small" @click="store_purchase" :disabled="isRunning || selectedTokens.length === 0">黑市采购</n-button>
+                    <n-button size="small" @click="collection_claimfreereward" :disabled="isRunning || selectedTokens.length === 0">珍宝阁</n-button>
+                    <n-button size="small" @click="batchLegacyClaim" :disabled="isRunning || selectedTokens.length === 0">功法领取</n-button>
+                    <n-button size="small" @click="showLegacyGiftModal = true" :disabled="isRunning || selectedTokens.length === 0">功法赠送</n-button>
+                  </n-space>
+                </div>
+              </n-collapse-item>
+            </n-collapse>
+          </div>
+
+          <!-- 排序按钮组 -->
+          <div class="sort-buttons" style="margin: 12px 0">
+            <n-space align="center" size="small">
+              <span style="font-size: 12px; color: #999">排序:</span>
+              <n-button-group size="small">
+                <n-button
+                  @click="toggleSort('name')"
+                  :type="sortConfig.field === 'name' ? 'primary' : 'default'"
+                >
+                  名称 {{ getSortIcon("name") }}
+                </n-button>
+                <n-button
+                  @click="toggleSort('server')"
+                  :type="sortConfig.field === 'server' ? 'primary' : 'default'"
+                >
+                  服务器 {{ getSortIcon("server") }}
+                </n-button>
+                <n-button
+                  @click="toggleSort('createdAt')"
+                  :type="sortConfig.field === 'createdAt' ? 'primary' : 'default'"
+                >
+                  创建时间 {{ getSortIcon("createdAt") }}
+                </n-button>
+                <n-button
+                  @click="toggleSort('lastUsed')"
+                  :type="sortConfig.field === 'lastUsed' ? 'primary' : 'default'"
+                >
+                  最后使用 {{ getSortIcon("lastUsed") }}
+                </n-button>
+              </n-button-group>
+            </n-space>
+          </div>
+
+          <n-space vertical>
+            <n-checkbox
+              :checked="isAllSelected"
+              :indeterminate="isIndeterminate"
+              @update:checked="handleSelectAll"
+            >
+              全选
+            </n-checkbox>
+            <n-checkbox-group v-model:value="selectedTokens">
+              <n-grid
+                :x-gap="12"
+                :y-gap="8"
+                :cols="2"
+                responsive="screen"
+              >
+                <n-grid-item v-for="token in sortedTokens" :key="token.id">
+                  <div class="token-row">
+                    <n-checkbox
+                      :value="token.id"
+                      :label="token.name"
+                      style="flex: 1"
+                    >
+                      <div class="token-item">
+                        <span>{{ token.name }}</span>
+                        <n-tag
+                          size="small"
+                          :type="getStatusType(token.id)"
+                          style="margin-left: 8px"
+                        >
+                          {{ getStatusText(token.id) }}
+                        </n-tag>
+                      </div>
+                    </n-checkbox>
+                    <n-button
+                      size="tiny"
+                      circle
+                      @click.stop="openSettings(token)"
+                    >
+                      <template #icon>
+                        <n-icon>
+                          <Settings />
+                        </n-icon>
+                      </template>
+                    </n-button>
+                  </div>
+                </n-grid-item>
+              </n-grid>
+            </n-checkbox-group>
+          </n-space>
+        </n-card>
+
+        <!-- Scheduled Tasks -->
+        <n-card
+          v-if="!batchSettings.hideScheduledTasksModule"
+          title="定时任务"
+          class="scheduled-tasks-card"
+          style="margin-top: 16px"
+        >
           <n-space style="margin-bottom: 12px">
+            <n-button type="primary" size="small" @click="openTaskModal">
+              新增定时任务
+            </n-button>
+            <n-button size="small" @click="showTasksModal = true">
+              查看定时任务
+            </n-button>
+          </n-space>
             <n-button
               size="small"
               @click="claimHangUpRewards"
@@ -1869,6 +2021,19 @@ const toggleSort = (field) => {
 const getSortIcon = (field) => {
   if (sortConfig.value.field !== field) return null;
   return sortConfig.value.direction === "asc" ? "↑" : "↓";
+};
+
+// 处理头部菜单选择
+const handleHeaderMenuSelect = (key) => {
+  if (key === 'templates') {
+    openTemplateManagerModal();
+  } else if (key === 'settings') {
+    openBatchSettings();
+  } else if (key === 'export') {
+    exportAllData();
+  } else if (key === 'import') {
+    triggerImport();
+  }
 };
 
 const tokens = computed(() => tokenStore.gameTokens);
@@ -8128,16 +8293,15 @@ const stopBatch = () => {
 <style scoped>
 .batch-daily-tasks {
   padding: 20px;
-  height: 100vh;
+  min-height: 100vh;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .main-layout {
   display: flex;
   gap: 20px;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
 }
 
 .left-column {
@@ -8158,8 +8322,71 @@ const stopBatch = () => {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-left h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+}
+
+.task-status-info {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.task-count {
+  margin-bottom: 4px;
+}
+
+.task-countdown {
+  color: #1677ff;
+  margin-bottom: 4px;
+}
+
+.task-countdown-empty {
+  color: #999;
+}
+
+.header-quick-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.header-menu-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-action-tabs {
+  margin-bottom: 12px;
+}
+
+.tab-group {
+  margin-bottom: 12px;
+}
+
+.tab-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.more-features-grid {
+  display: grid;
+  gap: 8px;
 }
 
 .token-item {
@@ -8349,14 +8576,13 @@ const stopBatch = () => {
 
 @media (max-width: 992px) {
   .batch-daily-tasks {
-    height: auto;
-    overflow: visible;
+    padding: 12px;
+    min-height: auto;
   }
 
   .main-layout {
     flex-direction: column;
-    height: auto;
-    overflow: visible;
+    gap: 12px;
   }
 
   .left-column {
@@ -8367,107 +8593,278 @@ const stopBatch = () => {
   .right-column {
     width: 100%;
     height: auto;
-    flex-shrink: 0;
   }
 
   .log-container {
     height: 300px;
     min-height: 300px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-left,
+  .header-quick-actions,
+  .header-menu-actions {
+    width: 100%;
   }
 }
 
 @media (max-width: 768px) {
   .batch-daily-tasks {
-    padding: 12px;
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    padding: 8px;
   }
 
   .main-layout {
-    height: auto;
-    overflow: visible;
     flex-direction: column;
-  }
-
-  .left-column {
-    overflow: visible;
-    padding-right: 0;
-    flex: none;
-    height: auto;
-  }
-
-  .right-column {
-    height: auto;
-    width: 100%;
-    flex: none;
+    gap: 8px;
   }
 
   .page-header {
     flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .page-header .actions {
-    display: flex;
     gap: 8px;
   }
 
+  .header-left h2 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .task-status-info {
+    font-size: 12px;
+  }
+
+  .header-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .header-menu-actions {
+    width: 100%;
+  }
+
+  .quick-action-tabs {
+    margin-bottom: 8px;
+  }
+
+  .tab-group {
+    margin-bottom: 8px;
+  }
+
+  .tab-label {
+    font-size: 11px;
+  }
+
   .log-card {
-    height: auto !important;
+    height: auto;
   }
 
   .log-card :deep(.n-card__content) {
-    flex: none !important;
-    overflow: visible !important;
-    display: block !important;
+    overflow: visible;
   }
 
   .log-container {
-    height: 300px;
-    min-height: 300px;
-    flex: none !important;
+    height: 250px;
+    min-height: 250px;
   }
 
   .log-header-controls {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 4px;
   }
-  /* 批量功法残卷赠送样式 */
-  .recipient-info:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+
+  /* 按钮响应式 */
+  :deep(.n-button) {
+    font-size: 12px;
+    padding: 0 10px;
   }
 
-  /* 头像悬停效果 */
-  .avatar-container:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+  :deep(.n-button--small) {
+    padding: 0 8px;
   }
 
-  /* 加载动画 */
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+  :deep(.n-button-group) {
+    display: flex;
+    flex-wrap: wrap;
   }
 
-  /* 响应式设计 */
-  @media (max-width: 600px) {
-    .recipient-info {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
+  :deep(.n-button-group .n-button) {
+    font-size: 11px;
+  }
 
-    .avatar-container {
-      margin-bottom: 12px;
+  /* 卡片响应式 */
+  .token-list-card :deep(.n-card__content) {
+    padding: 12px;
+  }
+
+  /* 栅格调整 */
+  :deep(.n-grid) {
+    gap: 8px 8px !important;
+  }
+
+  /* 空间调整 */
+  :deep(.n-space) {
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .batch-daily-tasks {
+    padding: 4px;
+  }
+
+  .page-header {
+    gap: 4px;
+  }
+
+  .header-left h2 {
+    font-size: 14px;
+  }
+
+  .task-status-info {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .header-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .header-quick-actions :deep(.n-button),
+  .header-menu-actions :deep(.n-button) {
+    width: 100%;
+  }
+
+  /* 按钮更紧凑 */
+  :deep(.n-button) {
+    font-size: 11px !important;
+    padding: 0 8px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+  }
+
+  :deep(.n-button--small) {
+    height: 24px !important;
+    padding: 0 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* 卡片标题字号 */
+  :deep(.n-card__header) {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  :deep(.n-card__content) {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  /* 标签更小 */
+  :deep(.n-tag) {
+    font-size: 10px;
+    padding: 0 4px;
+    height: 18px;
+    line-height: 18px;
+  }
+
+  /* 日志容器 */
+  .log-container {
+    height: 200px;
+    min-height: 200px;
+    padding: 6px;
+    font-size: 10px;
+  }
+
+  .log-item {
+    margin-bottom: 2px;
+  }
+
+  .time {
+    margin-right: 4px;
+    font-size: 9px;
+  }
+
+  /* 模态框 */
+  :deep(.n-modal) {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  /* 输入框 */
+  :deep(.n-input) {
+    font-size: 14px; /* iOS need 16px+ to prevent zoom, but 14px is acceptable for touch */
+  }
+
+  :deep(.n-input--small) {
+    font-size: 12px;
+  }
+
+  /* 栅格调整 */
+  :deep(.n-grid--cols-2) {
+    gap: 4px 4px !important;
+    --n-gutter-x: 4px;
+    --n-gutter-y: 4px;
+  }
+
+  /* 禁用大的间距 */
+  :deep(.n-space) {
+    gap: 4px !important;
+  }
+
+  /* 折叠项优化 */
+  :deep(.n-collapse-item__header) {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  :deep(.n-collapse-item__content) {
+    padding: 8px 12px;
+  }
+}
+
+/* iOS特定优化 */
+@supports (-webkit-touch-callout: none) {
+  .batch-daily-tasks {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :deep(.n-button) {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 修复100vh问题（在iOS Safari中包括地址栏）*/
+  @media (orientation: portrait) {
+    .batch-daily-tasks {
+      min-height: 100vh;
     }
+  }
+}
+
+/* 横屏模式 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .batch-daily-tasks {
+    min-height: auto;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .main-layout {
+    gap: 6px;
+  }
+
+  .log-container {
+    max-height: 40vh;
+  }
+
+  .right-column {
+    max-height: 40vh;
   }
 }
 </style>
