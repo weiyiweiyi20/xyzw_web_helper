@@ -543,32 +543,24 @@ const handleExport = async () => {
 const exportToImage = async () => {
   // 校验：确保DOM已正确绑定
   if (!exportDom.value) {
-    alert('未找到要导出的DOM元素');
+    message.error('未找到要导出的DOM元素');
     return;
   }
 
   try {
-    // 保存原始样式
-    const exportToImage = async () => {
-      if (!exportDom.value) {
-        message.error('未找到要导出的DOM元素');
-        return;
-      }
+    const filename = queryDate.value.replace("/", "年").replace("/", "月") + "日盐场战报";
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
 
-      try {
-        const filename = queryDate.value.replace("/", "年").replace("/", "月") + "日盐场战报";
-        const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
+    // 微信环境中显示图片预览
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
+    }
 
-        // 微信环境中显示图片预览
-        if (result.isWeChat) {
-          showExportImageModal(result.url, filename);
-        }
-
-        message.success(result.message);
-      } catch (err) {
-        console.error('导出失败：', err);
-        message.error('导出图片失败，请重试');
-      }
+    message.success(result.message);
+  } catch (err) {
+    console.error('导出失败：', err);
+    message.error('导出图片失败，请重试');
+  }
 }
 
 // 关闭弹窗

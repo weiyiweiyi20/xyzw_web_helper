@@ -152,6 +152,26 @@ const showModal = computed({
 })
 
 const loading = ref(false)
+const memberScores = ref([])
+
+// 获取俱乐部怪异塔信息
+const fetchWeirdTowerInfo = async () => {
+  loading.value = true
+  try {
+    // 这里添加实际的API调用逻辑
+    // const data = await getWeirdTowerInfo()
+    // memberScores.value = data || []
+    memberScores.value = []
+    message.success('数据加载成功')
+  } catch (error) {
+    console.error('加载失败:', error)
+    message.error('加载数据失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 导出图片
 const exportToImage = async () => {
   if (!exportDom.value) {
     message.error('未找到要导出的DOM元素');
@@ -170,132 +190,21 @@ const exportToImage = async () => {
     message.error('导出图片失败，请重试');
   }
 };
-  try {
-    exportToImage()
-    message.success('导出成功')
-  } catch (error) {
-    console.error('导出失败:', error)
-    message.error('导出失败，请重试')
-  }
+
+// 处理导出按钮
+const handleExport = async () => {
+  await exportToImage()
 }
 
-const exportToImage = async () => {
-  // 校验：确保DOM已正确绑定
-  if (!exportDom.value) {
-    alert('未找到要导出的DOM元素');
-    return;
-  }
+// 处理刷新按钮
+const handleRefresh = async () => {
+  await fetchWeirdTowerInfo()
+}
 
-  try {
-    // 保存原始样式
-    const originalStyles = [];
-    
-    // 递归函数：清除所有子元素的高度和溢出限制
-    const clearHeightRestrictions = (element) => {
-      if (!element) return;
-      
-      // 记录原始样式
-      originalStyles.push({
-        element,
-        height: element.style.height,
-        maxHeight: element.style.maxHeight,
-        overflow: element.style.overflow,
-        overflowY: element.style.overflowY,
-        overflowX: element.style.overflowX
-      });
-      
-      // 清除当前元素的高度和溢出限制
-      element.style.height = 'auto';
-      element.style.maxHeight = 'none';
-      element.style.overflow = 'visible';
-      element.style.overflowY = 'visible';
-      element.style.overflowX = 'visible';
-      
-      // 递归处理所有子元素
-      const children = element.children;
-      for (let i = 0; i < children.length; i++) {
-        clearHeightRestrictions(children[i]);
-      }
-    };
-    
-    // 清除所有高度限制
-    clearHeightRestrictions(exportDom.value);
-    
-    // 等待DOM更新和重排
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // 获取导出元素的实际尺寸（包含所有内容）
-    const scrollHeight = exportDom.value.scrollHeight;
-    const scrollWidth = exportDom.value.scrollWidth;
-    const clientHeight = exportDom.value.clientHeight;
-    const clientWidth = exportDom.value.clientWidth;
-    
-    // 使用实际的滚动高度和宽度（取更大值以确保完整）
-    const actualHeight = Math.max(scrollHeight, clientHeight);
-    const actualWidth = Math.max(scrollWidth, clientWidth);
-    
-    console.log(`导出尺寸 - 宽: ${actualWidth}px, 高: ${actualHeight}px`);
-    
-    // 5. 用html2canvas渲染DOM为Canvas
-    const canvas = await html2canvas(exportDom.value, {
-      scale: 2, // 放大2倍，解决图片模糊问题
-      useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
-      backgroundColor: '#ffffff', // 避免透明背景（默认透明）
-      logging: false, // 关闭控制台日志
-      height: actualHeight, // 使用实际的内容高度
-      width: actualWidth, // 使用实际的内容宽度
-      windowWidth: actualWidth, // 设置窗口宽度
-      windowHeight: actualHeight, // 设置窗口高度
-      allowTaint: true, // 允许跨域图片污染画布
-      proxy: null, // 禁用代理以避免跨域问题
-      // 克隆后处理回调
-      onclone: (cloned) => {
-        const clonedElement = cloned.querySelector('[class*="tower"]') || 
-                             cloned.querySelector('div');
-        if (clonedElement) {
-          const clearClonedStyles = (el) => {
-            if (!el) return;
-            el.style.height = 'auto';
-            el.style.maxHeight = 'none';
-            el.style.overflow = 'visible';
-            el.style.overflowY = 'visible';
-            el.style.overflowX = 'visible';
-            for (let i = 0; i < el.children.length; i++) {
-              clearClonedStyles(el.children[i]);
-            }
-          };
-          clearClonedStyles(clonedElement);
-        }
-      }
-    });
-
-    // 恢复原始样式
-    originalStyles.forEach(({ element, height, maxHeight, overflow, overflowY, overflowX }) => {
-      element.style.height = height;
-      element.style.maxHeight = maxHeight;
-      element.style.overflow = overflow;
-      element.style.overflowY = overflowY;
-      element.style.overflowX = overflowX;
-    });
-
-    // 6. Canvas转图片链接（支持PNG/JPG）
-    const imgUrl = canvas.toDataURL('image/png'); // 若要JPG，改为'image/jpeg'
-
-    // 7. 创建下载链接，触发浏览器下载
-    const link = document.createElement('a');
-    link.href = imgUrl;
-    const queryDate = ref(gettoday())
-    link.download = queryDate.value.replace("/",'年').replace("/",'月')+'日俱乐部怪异塔数据.png'; // 下载文件名
-    document.body.appendChild(link);
-    link.click(); // 触发点击下载
-    document.body.removeChild(link); // 下载后清理DOM
-    
-    message.success('图片导出成功');
-  } catch (err) {
-    console.error('DOM转图片失败：', err);
-    message.error('导出图片失败，请重试');
-  }
-};
+// 处理图片加载错误
+const handleImageError = (event) => {
+  event.target.style.display = 'none'
+}
 
 // 关闭弹窗
 const handleClose = () => {
