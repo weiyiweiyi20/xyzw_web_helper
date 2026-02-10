@@ -264,6 +264,7 @@
               查看定时任务
             </n-button>
           </n-space>
+          <n-space style="margin-bottom: 12px" wrap>
             <n-button
               size="small"
               @click="claimHangUpRewards"
