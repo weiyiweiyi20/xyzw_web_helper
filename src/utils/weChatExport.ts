@@ -1,6 +1,7 @@
 /**
  * 微信 WebView 兼容的图片导出工具
  */
+import html2canvas from 'html2canvas';
 
 /**
  * 检测是否运行在微信环境中
@@ -40,12 +41,6 @@ export const exportToImageWithWeChatSupport = async (
   filename: string,
   options: any = {}
 ): Promise<{ url: string; isWeChat: boolean; message: string }> => {
-  const { html2canvas } = (window as any);
-
-  if (!html2canvas) {
-    throw new Error('html2canvas 未加载，请确保已引入该库');
-  }
-
   // 检测环境
   const inWeChat = isInWeChat();
   const isMobile = isMobileDevice();
@@ -100,13 +95,15 @@ export const exportToImageWithWeChatSupport = async (
       element.clientWidth
     );
 
+    console.log(`[导出调试] 元素尺寸: ${actualWidth}x${actualHeight}, 环境: ${inWeChat ? '微信' : '浏览器'}`);
+
     // 微信环境特殊配置
     const weChatOptions = inWeChat
       ? {
           scale: 1, // 微信中降低scale避免Canvas过大
           useCORS: true,
           backgroundColor: '#ffffff',
-          logging: false,
+          logging: true,
           height: actualHeight,
           width: actualWidth,
           windowWidth: actualWidth,
@@ -148,14 +145,12 @@ export const exportToImageWithWeChatSupport = async (
         };
 
     // 渲染Canvas
+    console.log('[导出调试] 开始html2canvas渲染...');
     const canvas = await html2canvas(element, weChatOptions);
+    console.log(`[导出调试] Canvas生成成功: ${canvas.width}x${canvas.height}`);
 
-    // 检查Canvas是否为空
-    const ctx = canvas.getContext('2d');
-    const imageData = ctx?.getImageData(0, 0, 1, 1);
-    const isCanvasEmpty =
-      imageData?.data[3] === 0; // 检查alpha通道是否为0
-
+    // 转换为URL
+    console.log('[导出调试] 转换为图片URL...');
     let url: string;
     let message: string;
 
@@ -163,6 +158,7 @@ export const exportToImageWithWeChatSupport = async (
       // 微信环境：使用base64 (避免blob问题)
       url = canvas.toDataURL('image/png', 0.8);
       message = '⚠️ 请长按图片保存到相册，或点击分享到朋友圈';
+      console.log('[导出调试] 微信环境: Base64图片已生成');
 
       // 微信中如果需要下载，可以用JS bridge调用微信API
       if ((window as any).wx && (window as any).wx.ready) {
@@ -175,31 +171,41 @@ export const exportToImageWithWeChatSupport = async (
           dataUrl: url
         });
       }
-    } else if (isCanvasEmpty && isMobile) {
+    } else if (isMobile) {
       // 移动Safari中Canvas为空的情况
       url = canvas.toDataURL('image/png', 0.8);
       message = '✅ 导出成功，请长按图片保存';
+      console.log('[导出调试] 移动设备: Base64图片已生成');
     } else {
       // 正常环境：使用blob下载
       url = canvas.toDataURL('image/png');
       message = '✅ 导出成功';
+      console.log('[导出调试] 正常环境: 触发自动下载');
 
       // 自动下载（非微信非移动环境）
-      if (!isMobile) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${filename}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${filename}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
+    console.log('[导出调试] 导出成功');
     return {
       url,
       isWeChat: inWeChat,
       message
     };
+  } catch (error: any) {
+    console.error('[导出调试] 导出失败:', error);
+    if (error.message) {
+      console.error('[导出调试] 错误信息:', error.message);
+    }
+    if (error.stack) {
+      console.error('[导出调试] 错误堆栈:', error.stack);
+    }
+    throw error;
   } finally {
     // 恢复原始样式
     originalStyles.forEach(({ element, height, maxHeight, overflow, overflowY, overflowX }) => {
