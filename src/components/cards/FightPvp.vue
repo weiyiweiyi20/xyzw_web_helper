@@ -436,6 +436,7 @@ import {
 } from '@/utils/clubBattleUtils'
 import { gettoday, formatWarrankRecordsForExport, allianceincludes } from '@/utils/goldWarrankUtils'
 import { HERO_DICT, HeroFillInfo,formatWeapon } from '@/utils/HeroList'
+import { exportToImageWithWeChatSupport, showExportImageModal } from '@/utils/weChatExport';
 import html2canvas from 'html2canvas';
 
 const props = defineProps({
@@ -544,118 +545,24 @@ const formatPower = (power) => {
 }
 
 // 获取战斗样式类
-const getBattleClass = (battle) => {
-  const classes = []
-  if (battle.isWin) {
-    classes.push('battle-win')
-  } else {
-    classes.push('battle-loss')
+const handleExport1 = async () => {
+  if (!exportDom.value) {
+    message.error('未找到要导出的DOM元素');
+    return;
   }
-  return classes.join(' ')
-}
-
-const formatScore = (score) => {
-  return score.toFixed(0).toString()
-}
-
-const formatServerId = (ServerId) => {
-  return (ServerId - 27).toFixed(0).toString()
-}
-
-
-// 处理图片加载错误
-const handleImageError = (event) => {
-  event.target.style.display = 'none'
-}
-
-// 切磋
-const fetchfightPVP = async () => {
-  if (!tokenStore.selectedToken) {
-    message.warning('请先选择游戏角色')
-    return
-  }
-
-  const tokenId = tokenStore.selectedToken.id
-
-  // 检查WebSocket连接
-  const wsStatus = tokenStore.getWebSocketStatus(tokenId)
-  if (wsStatus !== 'connected') {
-    message.error('WebSocket未连接，无法查询战绩')
-    return
-  }
-
-  loading1.value = true
-  loadingText.value = '正在进行切磋，请稍候...'
-  queryDate.value = gettoday()
 
   try {
-    let winCount = 0;
-    let ourTotalDieHeroCount = 0; // 我方总掉落将领数
-    let enemyTotalDieHeroCount = 0; // 敌方总掉落将领数
-    let resultCount = [];
-    for (var i = 0; i < fightNum.value; i++) {
-      const result = await tokenStore.sendMessageWithPromise(tokenId, 'fight_startpvp',
-        {
-          targetId: targetId.value,
-        }, 5000)
-      if (!result.battleData) {
-        fightResult.value = null;
-        message.warning('切磋错误');
-        return;
-      }
-      //处理掉将情况
-      let leftCount = 0;
-      result.battleData.result.sponsor.teamInfo.forEach(item => {
-        if (item.hp == 0) {
-          leftCount++;
-        }
-      })
-      ourTotalDieHeroCount += leftCount;
-      
-      let rightCount = 0;
-      result.battleData.result.accept.teamInfo.forEach(item => {
-        if (item.hp == 0) {
-          rightCount++;
-        }
-      })
-      enemyTotalDieHeroCount += rightCount;
-      
-      let tempObj = {
-        leftName: result.battleData.leftTeam.name,
-        leftheadImg: result.battleData.leftTeam.headImg,
-        leftpower: formatPower(result.battleData.leftTeam.power),
-        rightName: result.battleData.rightTeam.name,
-        rightheadImg: result.battleData.rightTeam.headImg,
-        rightpower: formatPower(result.battleData.rightTeam.power),
-        //掉将情况
-        leftDieHero: leftCount,
-        rightDieHero: rightCount,
-        isWin: result.battleData.result.isWin ? true : false //对战结果
-      }
-      if (result.battleData.result.isWin) {
-        winCount++;
-      }
-      resultCount.push(tempObj);
+    const filename = `pvp-${Date.now()}`;
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
     }
-    const teamData = {
-      winCount,
-      ourTotalDieHeroCount,
-      enemyTotalDieHeroCount,
-      resultCount
-    };
-    fightResult.value = teamData;
-    message.success('切磋完成');
-    return teamData;
-
-  } catch (error) {
-    message.error(`查询失败: ${error.message}`);
-    topranklist.value = null;
-  } finally {
-    loading1.value = false;
-    loadingText.value = '正在查询对手信息...'
+    message.success(result.message);
+  } catch (err) {
+    console.error('导出失败：', err);
+    message.error('导出失败，请重试');
   }
 }
-
 // 查询
 const fetchTargetInfo = async () => {
   if (!tokenStore.selectedToken) {

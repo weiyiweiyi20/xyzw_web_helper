@@ -510,6 +510,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMessage, NCheckboxGroup, NCheckbox } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
+import { exportToImageWithWeChatSupport, showExportImageModal } from '@/utils/weChatExport';
 import html2canvas from 'html2canvas';
 import {
   Trophy,
@@ -936,18 +937,12 @@ const exportToImage = async () => {
       element.style.overflowX = overflowX;
     });
 
-    // 6. Canvas转图片链接（支持PNG/JPG）
-    const imgUrl = canvas.toDataURL('image/png'); // 若要JPG，改为'image/jpeg'
-
-    // 7. 创建下载链接，触发浏览器下载
-    const link = document.createElement('a');
-    link.href = imgUrl;
-    link.download = queryDate.value.replace("/",'年').replace("/",'月')+'日蟠桃园战报.png'; // 下载文件名
-    document.body.appendChild(link);
-    link.click(); // 触发点击下载
-    document.body.removeChild(link); // 下载后清理DOM
-    
-    message.success('图片导出成功');
+    const filename = queryDate.value.replace("/",'年').replace("/",'月') + '日蟠桃园战报';
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
+    }
+    message.success(result.message);
   } catch (err) {
     console.error('DOM转图片失败：', err);
     message.error('导出图片失败，请重试');

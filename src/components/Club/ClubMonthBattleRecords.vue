@@ -140,7 +140,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMessage, NCheckboxGroup, NCheckbox } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
-import html2canvas from 'html2canvas';
+import { exportToImageWithWeChatSupport, showExportImageModal } from '@/utils/weChatExport';
 import {
   Trophy,
   Refresh,

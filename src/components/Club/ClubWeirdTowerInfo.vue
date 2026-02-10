@@ -118,6 +118,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
+import { exportToImageWithWeChatSupport, showExportImageModal } from '@/utils/weChatExport';
 import html2canvas from 'html2canvas';
 import {
   Trophy,
@@ -151,122 +152,24 @@ const showModal = computed({
 })
 
 const loading = ref(false)
-const memberScores = ref([])
-
-// 处理图片加载错误
-const handleImageError = (event) => {
-  event.target.style.display = 'none'
-}
-
-// 怪异塔层数转换
-const handleEvotower = (towerId) => {
-  if (towerId === 0) {
-    return "1-1";
-  } else {
-    // 计算章节和层数
-    // 每章10层，0-9为第1章，10-19为第2章，20-29为第3章，以此类推
-    const chapter = Math.floor(towerId / 10) + 1;
-    const floor = (towerId % 10) + 1;
-    return `${chapter}-${floor}`;
+const exportToImage = async () => {
+  if (!exportDom.value) {
+    message.error('未找到要导出的DOM元素');
+    return;
   }
-}
-
-// 获取爬塔数据
-const fetchWeirdTowerInfo = async () => {
-  if (!tokenStore.selectedToken) {
-    message.warning('请先选择游戏角色')
-    return
-  }
-
-  const tokenId = tokenStore.selectedToken.id
-
-  // 检查WebSocket连接
-  const wsStatus = tokenStore.getWebSocketStatus(tokenId)
-  if (wsStatus !== 'connected') {
-    message.error('WebSocket未连接，无法查询爬塔数据')
-    return
-  }
-
-  loading.value = true
 
   try {
-    // 获取爬塔数据
-    const result = await tokenStore.sendMessageWithPromise(
-      tokenId,
-      'evotower_getlegionjoinmembers',
-      {},
-      10000
-    )
-
-    if (result && result.memberScores) {
-      // 转换数据格式
-      const members = Object.entries(result.memberScores).map(([roleId, towerCount]) => ({
-        roleId: parseInt(roleId),
-        towerCount: towerCount,
-        towerCountconvert: handleEvotower(towerCount)
-      }))
-
-      // 按爬塔数量从高到低排序
-      members.sort((a, b) => b.towerCount - a.towerCount)
-
-      // 获取每个玩家的详细信息
-      const membersWithInfo = await Promise.all(
-        members.map(async (member) => {
-          try {
-            const result = await tokenStore.sendMessageWithPromise(
-              tokenId,
-              'rank_getroleinfo',
-              {
-                bottleType: 0,
-                includeBottleTeam: false,
-                isSearch: false,
-                roleId: member.roleId
-              },
-              5000
-            )
-
-            return {
-              ...member,
-              name: result.roleInfo?.name,
-              headImg: result.roleInfo?.headImg
-            }
-          } catch (error) {
-            console.error(`获取玩家${member.roleId}信息失败:`, error)
-            return {
-              ...member,
-              name: `未知玩家${member.roleId}`
-            }
-          }
-        })
-      )
-
-      memberScores.value = membersWithInfo
-      message.success('怪异塔数据加载成功，已按怪异塔数量从高到低排序')
-    } else {
-      memberScores.value = []
-      message.warning('未查询到怪异塔数据')
+    const filename = '怪异塔数据导出';
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
     }
-  } catch (error) {
-    console.error('查询怪异塔数据失败:', error)
-    message.error(`查询失败: ${error.message}`)
-    memberScores.value = []
-  } finally {
-    loading.value = false
+    message.success(result.message);
+  } catch (err) {
+    console.error('导出失败：', err);
+    message.error('导出图片失败，请重试');
   }
-}
-
-// 刷新爬塔数据
-const handleRefresh = () => {
-  fetchWeirdTowerInfo()
-}
-
-// 导出数据
-const handleExport = async () => {
-  if (!memberScores.value) {
-    message.warning('没有可导出的数据')
-    return
-  }
-
+};
   try {
     exportToImage()
     message.success('导出成功')

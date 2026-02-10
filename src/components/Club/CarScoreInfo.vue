@@ -118,6 +118,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useTokenStore } from '@/stores/tokenStore'
+import { exportToImageWithWeChatSupport, showExportImageModal } from '@/utils/weChatExport';
 import html2canvas from 'html2canvas';
 import {
   Trophy,
@@ -151,122 +152,24 @@ const showModal = computed({
 })
 
 const loading = ref(false)
-const memberScores = ref([])
-
-// 处理图片加载错误
-const handleImageError = (event) => {
-  event.target.style.display = 'none'
-}
-
-// 获取赛车数据
-const fetchWeirdTowerInfo = async () => {
-  if (!tokenStore.selectedToken) {
-    message.warning('请先选择游戏角色')
-    return
-  }
-
-  const tokenId = tokenStore.selectedToken.id
-
-  // 检查WebSocket连接
-  const wsStatus = tokenStore.getWebSocketStatus(tokenId)
-  if (wsStatus !== 'connected') {
-    message.error('WebSocket未连接，无法查询爬塔数据')
-    return
-  }
-
-  loading.value = true
-
-  try {
-    // 获取赛车数据
-    const result = await tokenStore.sendMessageWithPromise(
-      tokenId,
-      'car_getmemberrank',
-      {},
-      10000
-    )
-
-    if (result && result.list) {
-      // 转换数据格式
-      const members = result.list.map((member) => ({
-        roleId: member.roleId,
-        name: member.name,
-        headImg: member.headImg?.replace(/`/g, '').trim(), // 移除可能的反引号和空格
-        score: member.score,
-        power: member.power,
-        rank: member.rank,
-        serverId: member.serverId
-      }))
-
-      // 按积分从高到低排序
-      members.sort((a, b) => b.score - a.score)
-
-      memberScores.value = members
-      message.success('赛车数据加载成功，已按积分从高到低排序')
-    } else {
-      memberScores.value = []
-      message.warning('未查询到赛车数据')
-    }
-  } catch (error) {
-      console.error('查询赛车数据失败:', error)
-      message.error(`查询失败: ${error.message}`)
-      memberScores.value = []
-    } finally {
-      loading.value = false
-    }
-}
-
-// 刷新爬塔数据
-const handleRefresh = () => {
-  fetchWeirdTowerInfo()
-}
-
-// 导出数据
-const handleExport = async () => {
-  if (!memberScores.value) {
-    message.warning('没有可导出的数据')
-    return
-  }
-
-  try {
-    exportToImage()
-    message.success('导出成功')
-  } catch (error) {
-    console.error('导出失败:', error)
-    message.error('导出失败，请重试')
-  }
-}
-
 const exportToImage = async () => {
-  // 校验：确保DOM已正确绑定
   if (!exportDom.value) {
-    alert('未找到要导出的DOM元素');
+    message.error('未找到要导出的DOM元素');
     return;
   }
 
   try {
-    // 保存原始样式
-    const originalStyles = [];
-    
-    // 递归函数：清除所有子元素的高度和溢出限制
-    const clearHeightRestrictions = (element) => {
-      if (!element) return;
-      
-      // 记录原始样式
-      originalStyles.push({
-        element,
-        height: element.style.height,
-        maxHeight: element.style.maxHeight,
-        overflow: element.style.overflow,
-        overflowY: element.style.overflowY,
-        overflowX: element.style.overflowX
-      });
-      
-      // 清除当前元素的高度和溢出限制
-      element.style.height = 'auto';
-      element.style.maxHeight = 'none';
-      element.style.overflow = 'visible';
-      element.style.overflowY = 'visible';
-      element.style.overflowX = 'visible';
+    const filename = '赛车数据导出';
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
+    }
+    message.success(result.message);
+  } catch (err) {
+    console.error('导出失败：', err);
+    message.error('导出图片失败，请重试');
+  }
+};
       
       // 递归处理所有子元素
       const children = element.children;

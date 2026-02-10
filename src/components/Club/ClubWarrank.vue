@@ -534,6 +534,7 @@ import {
 } from '@/utils/clubBattleUtils'
 import { gettoday, formatWarrankRecordsForExport, allianceincludes } from '@/utils/clubWarrankUtils'
 import { HERO_DICT, HeroFillInfo } from '@/utils/HeroList'
+import { exportToImageWithWeChatSupport, showExportImageModal, isInWeChat } from '@/utils/weChatExport'
 
 const ScoreShow = ref(1);
 
@@ -1607,103 +1608,24 @@ const handleExport1 = async () => {
 }
 
 const exportToImage = async () => {
-  // 校验：确保DOM已正确绑定
   if (!exportDom.value) {
-    alert("未找到要导出的DOM元素");
+    message.error("未找到要导出的DOM元素");
     return;
   }
 
   try {
-    // 保存原始样式
-    const originalHeight = exportDom.value.style.height;
-    const originalOverflow = exportDom.value.style.overflow;
-    
-    // 递归函数：清除所有子元素的高度和溢出限制
-    const clearHeightRestrictions = (element) => {
-      if (!element) return;
-      
-      // 清除当前元素的高度和溢出限制
-      element.style.height = "auto";
-      element.style.maxHeight = "none";
-      element.style.overflow = "visible";
-      element.style.overflowY = "visible";
-      element.style.overflowX = "visible";
-      
-      // 递归处理所有子元素
-      const children = element.children;
-      for (let i = 0; i < children.length; i++) {
-        clearHeightRestrictions(children[i]);
-      }
-    };
-    
-    // 临时调整表格容器高度，确保所有内容可见
-    clearHeightRestrictions(exportDom.value);
-    
-    // 等待DOM更新和重排
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // 获取导出元素的实际尺寸（包含所有内容）
-    const scrollHeight = exportDom.value.scrollHeight;
-    const scrollWidth = exportDom.value.scrollWidth;
-    const clientHeight = exportDom.value.clientHeight;
-    const clientWidth = exportDom.value.clientWidth;
-    
-    // 使用实际的滚动高度和宽度（取更大值以确保完整）
-    const actualHeight = Math.max(scrollHeight, clientHeight);
-    const actualWidth = Math.max(scrollWidth, clientWidth);
-    
-    console.log(`导出尺寸 - 宽: ${actualWidth}px, 高: ${actualHeight}px`);
-    
-    // 5. 用html2canvas渲染DOM为Canvas
-    const canvas = await html2canvas(exportDom.value, {
-      scale: 2, // 放大2倍，解决图片模糊问题
-      useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
-      backgroundColor: "#ffffff", // 避免透明背景（默认透明）
-      logging: false, // 关闭控制台日志
-      height: actualHeight, // 使用实际的内容高度
-      width: actualWidth, // 使用实际的内容宽度
-      windowWidth: actualWidth, // 设置窗口宽度
-      windowHeight: actualHeight, // 设置窗口高度
-      allowTaint: true, // 允许跨域图片污染画布
-      proxy: null, // 禁用代理以避免跨域问题
-      // 克隆后处理回调
-      onclone: (cloned) => {
-        const clonedElement = cloned.querySelector('[class*="table-content"]') || 
-                             cloned.querySelector('div');
-        if (clonedElement) {
-          clearHeightRestrictions(clonedElement);
-        }
-      }
-    })
+    const filename = queryDate.value.replace("/", "年").replace("/", "月") + "日盐场匹配信息";
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
 
-    // 6. Canvas转图片链接（支持PNG/JPG）
-    const imgUrl = canvas.toDataURL("image/png")
-    // 若要JPG，改为'image/jpeg'
+    // 微信环境中显示图片预览
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
+    }
 
-    // 7. 创建下载链接，触发浏览器下载
-    const link = document.createElement("a")
-    link.href = imgUrl
-    link.download = queryDate.value.replace("/", "年").replace("/", "月") + "日盐场匹配信息.png"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    message.success("图片导出成功");
+    message.success(result.message);
   } catch (err) {
-    console.error("DOM转图片失败：", err)
-    message.error("导出图片失败，请重试")
-  } finally {
-    // 恢复原始样式
-    const recoverStyles = (element) => {
-      if (!element) return;
-      element.style.height = originalHeight;
-      element.style.overflow = originalOverflow;
-      const children = element.children;
-      for (let i = 0; i < children.length; i++) {
-        recoverStyles(children[i]);
-      }
-    };
-    recoverStyles(exportDom.value);
+    console.error("导出失败：", err);
+    message.error("导出图片失败，请重试");
   }
 }
 
