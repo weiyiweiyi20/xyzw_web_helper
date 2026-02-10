@@ -1618,12 +1618,41 @@ const exportToImage = async () => {
     const originalHeight = exportDom.value.style.height;
     const originalOverflow = exportDom.value.style.overflow;
     
-    // 临时调整表格容器高度，确保所有内容可见
-    exportDom.value.style.height = "auto";
-    exportDom.value.style.overflow = "visible";
+    // 递归函数：清除所有子元素的高度和溢出限制
+    const clearHeightRestrictions = (element) => {
+      if (!element) return;
+      
+      // 清除当前元素的高度和溢出限制
+      element.style.height = "auto";
+      element.style.maxHeight = "none";
+      element.style.overflow = "visible";
+      element.style.overflowY = "visible";
+      element.style.overflowX = "visible";
+      
+      // 递归处理所有子元素
+      const children = element.children;
+      for (let i = 0; i < children.length; i++) {
+        clearHeightRestrictions(children[i]);
+      }
+    };
     
-    // 等待DOM更新
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // 临时调整表格容器高度，确保所有内容可见
+    clearHeightRestrictions(exportDom.value);
+    
+    // 等待DOM更新和重排
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // 获取导出元素的实际尺寸（包含所有内容）
+    const scrollHeight = exportDom.value.scrollHeight;
+    const scrollWidth = exportDom.value.scrollWidth;
+    const clientHeight = exportDom.value.clientHeight;
+    const clientWidth = exportDom.value.clientWidth;
+    
+    // 使用实际的滚动高度和宽度（取更大值以确保完整）
+    const actualHeight = Math.max(scrollHeight, clientHeight);
+    const actualWidth = Math.max(scrollWidth, clientWidth);
+    
+    console.log(`导出尺寸 - 宽: ${actualWidth}px, 高: ${actualHeight}px`);
     
     // 5. 用html2canvas渲染DOM为Canvas
     const canvas = await html2canvas(exportDom.value, {
@@ -1631,11 +1660,20 @@ const exportToImage = async () => {
       useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
       backgroundColor: "#ffffff", // 避免透明背景（默认透明）
       logging: false, // 关闭控制台日志
-      height: exportDom.value.scrollHeight, // 确保捕获完整高度
-      width: exportDom.value.scrollWidth, // 确保捕获完整宽度
-      windowWidth: exportDom.value.scrollWidth, // 设置窗口宽度
-      windowHeight: exportDom.value.scrollHeight, // 设置窗口高度
+      height: actualHeight, // 使用实际的内容高度
+      width: actualWidth, // 使用实际的内容宽度
+      windowWidth: actualWidth, // 设置窗口宽度
+      windowHeight: actualHeight, // 设置窗口高度
       allowTaint: true, // 允许跨域图片污染画布
+      proxy: null, // 禁用代理以避免跨域问题
+      // 克隆后处理回调
+      onclone: (cloned) => {
+        const clonedElement = cloned.querySelector('[class*="table-content"]') || 
+                             cloned.querySelector('div');
+        if (clonedElement) {
+          clearHeightRestrictions(clonedElement);
+        }
+      }
     })
 
     // 6. Canvas转图片链接（支持PNG/JPG）
@@ -1649,13 +1687,23 @@ const exportToImage = async () => {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    
+    message.success("图片导出成功");
   } catch (err) {
     console.error("DOM转图片失败：", err)
-    alert("导出图片失败，请重试")
+    message.error("导出图片失败，请重试")
   } finally {
     // 恢复原始样式
-    exportDom.value.style.height = originalHeight;
-    exportDom.value.style.overflow = originalOverflow;
+    const recoverStyles = (element) => {
+      if (!element) return;
+      element.style.height = originalHeight;
+      element.style.overflow = originalOverflow;
+      const children = element.children;
+      for (let i = 0; i < children.length; i++) {
+        recoverStyles(children[i]);
+      }
+    };
+    recoverStyles(exportDom.value);
   }
 }
 

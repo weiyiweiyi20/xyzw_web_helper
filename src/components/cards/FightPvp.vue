@@ -830,25 +830,54 @@ const handleExport1 = async () => {
   }
 
   try {
-    // 获取结果列表元素
-    const resultList = exportDom.value.querySelector('.result-list');
-    let originalMaxHeight = '';
-    let originalOverflow = '';
-    let originalPaddingRight = '';
+    // 保存原始样式
+    const originalStyles = [];
     
-    // 临时移除结果列表的高度限制，让所有结果都可见
-    if (resultList) {
-      originalMaxHeight = resultList.style.maxHeight;
-      originalOverflow = resultList.style.overflowY;
-      originalPaddingRight = resultList.style.paddingRight;
+    // 递归函数：清除所有子元素的高度和溢出限制
+    const clearHeightRestrictions = (element) => {
+      if (!element) return;
       
-      resultList.style.maxHeight = 'none';
-      resultList.style.overflowY = 'visible';
-      resultList.style.paddingRight = '0';
-    }
+      // 记录原始样式
+      originalStyles.push({
+        element,
+        height: element.style.height,
+        maxHeight: element.style.maxHeight,
+        overflow: element.style.overflow,
+        overflowY: element.style.overflowY,
+        overflowX: element.style.overflowX
+      });
+      
+      // 清除当前元素的高度和溢出限制
+      element.style.height = 'auto';
+      element.style.maxHeight = 'none';
+      element.style.overflow = 'visible';
+      element.style.overflowY = 'visible';
+      element.style.overflowX = 'visible';
+      
+      // 递归处理所有子元素
+      const children = element.children;
+      for (let i = 0; i < children.length; i++) {
+        clearHeightRestrictions(children[i]);
+      }
+    };
     
-    // 等待DOM更新
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // 清除所有高度限制
+    clearHeightRestrictions(exportDom.value);
+    
+    // 等待DOM更新和重排
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // 获取导出元素的实际尺寸（包含所有内容）
+    const scrollHeight = exportDom.value.scrollHeight;
+    const scrollWidth = exportDom.value.scrollWidth;
+    const clientHeight = exportDom.value.clientHeight;
+    const clientWidth = exportDom.value.clientWidth;
+    
+    // 使用实际的滚动高度和宽度（取更大值以确保完整）
+    const actualHeight = Math.max(scrollHeight, clientHeight);
+    const actualWidth = Math.max(scrollWidth, clientWidth);
+    
+    console.log(`导出尺寸 - 宽: ${actualWidth}px, 高: ${actualHeight}px`);
     
     // 生成canvas并导出
     const canvas = await html2canvas(exportDom.value, {
@@ -856,16 +885,41 @@ const handleExport1 = async () => {
       useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
       backgroundColor: '#ffffff', // 避免透明背景（默认透明）
       logging: false, // 关闭控制台日志
-      allowTaint: true, // 允许跨域图片
-      taintTest: false // 关闭跨域测试
+      height: actualHeight, // 使用实际的内容高度
+      width: actualWidth, // 使用实际的内容宽度
+      windowWidth: actualWidth, // 设置窗口宽度
+      windowHeight: actualHeight, // 设置窗口高度
+      allowTaint: true, // 允许跨域图片污染画布
+      proxy: null, // 禁用代理以避免跨域问题
+      // 克隆后处理回调
+      onclone: (cloned) => {
+        const clonedElement = cloned.querySelector('[class*="fight"]') || 
+                             cloned.querySelector('div');
+        if (clonedElement) {
+          const clearClonedStyles = (el) => {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.maxHeight = 'none';
+            el.style.overflow = 'visible';
+            el.style.overflowY = 'visible';
+            el.style.overflowX = 'visible';
+            for (let i = 0; i < el.children.length; i++) {
+              clearClonedStyles(el.children[i]);
+            }
+          };
+          clearClonedStyles(clonedElement);
+        }
+      }
     });
     
     // 恢复原始样式
-    if (resultList) {
-      resultList.style.maxHeight = originalMaxHeight;
-      resultList.style.overflowY = originalOverflow;
-      resultList.style.paddingRight = originalPaddingRight;
-    }
+    originalStyles.forEach(({ element, height, maxHeight, overflow, overflowY, overflowX }) => {
+      element.style.height = height;
+      element.style.maxHeight = maxHeight;
+      element.style.overflow = overflow;
+      element.style.overflowY = overflowY;
+      element.style.overflowX = overflowX;
+    });
 
     const imgUrl = canvas.toDataURL('image/png'); 
 
@@ -874,10 +928,12 @@ const handleExport1 = async () => {
     link.download = '切磋结果.png'; 
     document.body.appendChild(link);
     link.click(); 
-    document.body.removeChild(link); 
+    document.body.removeChild(link);
+    
+    message.success('图片导出成功');
   } catch (err) {
     console.error('导出图片失败:', err);
-    alert('导出图片失败，请重试');
+    message.error('导出图片失败，请重试');
   }
 };
 
