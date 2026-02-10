@@ -729,19 +729,8 @@ const getTargetInfo = () => {
   fetchTargetInfo();
 }
 
-const handleExport1 = async () => {
-  // 校验：确保DOM已正确绑定
-  if (!exportDom.value) {
-    alert('未找到要导出的DOM元素');
-    return;
-  }
-
-  try {
-    // 保存原始样式
-    const originalStyles = [];
-    
-    // 递归函数：清除所有子元素的高度和溢出限制
-    const clearHeightRestrictions = (element) => {
+// 查询
+// [Duplicate handleExport1 removed - replaced with weChat-compatible version above]
       if (!element) return;
       
       // 记录原始样式
@@ -841,8 +830,7 @@ const handleExport1 = async () => {
   } catch (err) {
     console.error('导出图片失败:', err);
     message.error('导出图片失败，请重试');
-  }
-};
+
 
 // 关闭弹窗
 const handleClose = () => {

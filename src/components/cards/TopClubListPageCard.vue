@@ -304,32 +304,23 @@ const handleExport1 = async () => {
 };
 
 const exportToImage = async () => {
-  // 校验：确保DOM已正确绑定
   if (!exportDom.value) {
-    alert("未找到要导出的DOM元素");
+    message.error('未找到要导出的DOM元素');
     return;
   }
 
   try {
-    // 保存原始样式
-    const exportToImage = async () => {
-      if (!exportDom.value) {
-        message.error('未找到要导出的DOM元素');
-        return;
-      }
-
-      try {
-        const filename = '俱乐部列表导出';
-        const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
-        if (result.isWeChat) {
-          showExportImageModal(result.url, filename);
-        }
-        message.success(result.message);
-      } catch (err) {
-        console.error('导出失败：', err);
-        message.error('导出图片失败，请重试');
-      }
-    };
+    const filename = '俱乐部列表导出';
+    const result = await exportToImageWithWeChatSupport(exportDom.value, filename);
+    if (result.isWeChat) {
+      showExportImageModal(result.url, filename);
+    }
+    message.success(result.message);
+  } catch (err) {
+    console.error('导出失败：', err);
+    message.error('导出图片失败，请重试');
+  }
+};
 
 // 关闭弹窗
 const handleClose = () => {
