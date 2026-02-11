@@ -230,6 +230,8 @@ onMounted(() => {
   border-radius: var(--border-radius-medium);
   border: 1px solid var(--border-light);
   padding: var(--spacing-md);
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .inline-header {
