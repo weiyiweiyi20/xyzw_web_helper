@@ -876,6 +876,7 @@ onMounted(() => {
   border: 1px solid var(--border-light);
   flex-shrink: 0;
   min-width: max-content;
+  white-space: nowrap;
 }
 
 .header-avatar {
@@ -920,6 +921,7 @@ onMounted(() => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
   min-width: max-content;
+  white-space: nowrap;
 }
 
 .god-rank-number {
@@ -937,10 +939,28 @@ onMounted(() => {
 }
 
 .god-ranking-header > .god-rank-number {
+  width: 32px;
   background: transparent !important;
   color: var(--text-secondary) !important;
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.god-ranking-header > .header-avatar {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.god-ranking-header > .header-player {
+  width: 140px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.god-ranking-header > .header-stat {
+  width: 50px;
+  flex-shrink: 0;
 }
 
 .god-ranking-item:nth-of-type(2) .god-rank-number {
