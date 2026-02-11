@@ -272,6 +272,23 @@ onMounted(() => {
       gap: var(--spacing-sm);
     }
 
+    .announcement {
+      width: 100%;
+      overflow-x: hidden;
+      word-break: break-word;
+    }
+
+    .announcement .text {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      max-width: 100%;
+    }
+
+    .club-header {
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
     .club-info :deep(.n-tabs) {
       width: 100%;
     }
@@ -303,6 +320,11 @@ onMounted(() => {
       overflow-x: auto !important;
       overflow-y: hidden !important;
       -webkit-overflow-scrolling: touch;
+    }
+
+    .club-info :deep(.n-tab-pane) {
+      width: 100%;
+      overflow-x: hidden;
     }
   }
 

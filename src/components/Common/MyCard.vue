@@ -37,6 +37,8 @@ const $props = defineProps<{
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all var(--transition-normal);
   min-height: 200px;
+  width: 100%;
+  overflow-x: hidden;
 
   &:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -151,6 +153,8 @@ const $props = defineProps<{
   flex: 1;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  width: 100%;
+  overflow-x: hidden;
 
   h3 {
     font-size: var(--font-size-md);

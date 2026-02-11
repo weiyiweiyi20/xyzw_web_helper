@@ -651,39 +651,68 @@ const formatNumber = (num) => {
       overflow-x: hidden;
     }
 
+    .members-list {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
     .grid {
       grid-template-columns: repeat(2, 1fr);
       gap: var(--spacing-sm);
     }
 
+    .announcement,
+    .leader {
+      width: 100%;
+      overflow-x: hidden;
+      word-break: break-word;
+    }
+
+    .announcement .text {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      max-width: 100%;
+    }
+
     .member-row {
       flex-direction: column;
       align-items: flex-start;
-      gap: 4px;
+      gap: 8px;
       width: 100%;
       overflow-x: hidden;
     }
 
     .member-row .left {
       width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .member-row .left .name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      flex: 1;
+      min-width: 0;
     }
 
     .member-row .right {
       width: 100%;
-      justify-content: space-between;
+      justify-content: flex-start;
       font-size: 12px;
-      gap: 4px;
+      gap: 12px;
       flex-wrap: wrap;
+      display: flex;
+      align-items: center;
     }
 
     .member-row .right > * {
+      flex: 0 1 auto;
       min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: 48%;
     }
 
     .club-info :deep(.n-tabs) {
@@ -717,6 +746,11 @@ const formatNumber = (num) => {
       overflow-x: auto !important;
       overflow-y: hidden !important;
       -webkit-overflow-scrolling: touch;
+    }
+
+    .club-info :deep(.n-tab-pane) {
+      width: 100%;
+      overflow-x: hidden;
     }
   }
 
