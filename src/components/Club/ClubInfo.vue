@@ -643,26 +643,38 @@ const formatNumber = (num) => {
     gap: var(--spacing-md);
   }
 
-  .club-info :deep(.n-tabs-nav) {
-    @media (max-width: 768px) {
+  @media (max-width: 768px) {
+    .club-info :deep(.n-tabs) {
+      width: 100%;
+    }
+
+    .club-info :deep(.n-tabs-nav) {
       padding: 0 !important;
       overflow-x: auto !important;
+      overflow-y: hidden !important;
       -webkit-overflow-scrolling: touch;
+      flex: 1;
+      flex-wrap: nowrap;
     }
-  }
 
-  .club-info :deep(.n-tabs-nav--line) {
-    @media (max-width: 768px) {
+    .club-info :deep(.n-tabs-nav--line) {
       padding: 0 !important;
     }
-  }
 
-  .club-info :deep(.n-tabs-tab) {
-    @media (max-width: 768px) {
-      padding: 10px 14px !important;
-      min-width: 70px !important;
+    .club-info :deep(.n-tabs-tab) {
+      padding: 8px 12px !important;
+      min-width: fit-content !important;
       white-space: nowrap;
       font-size: 12px !important;
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .club-info :deep(.n-tabs-wrapper) {
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      -webkit-overflow-scrolling: touch;
     }
   }
 
