@@ -854,7 +854,11 @@ onMounted(() => {
 .god-ranking-content {
   max-height: 400px;
   overflow-y: auto;
+  overflow-x: auto;
   padding-right: var(--spacing-xs);
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 }
 
 .god-ranking-content::-webkit-scrollbar {
@@ -873,6 +877,8 @@ onMounted(() => {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   border: 1px solid var(--border-light);
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .header-avatar {
@@ -915,6 +921,8 @@ onMounted(() => {
   border-radius: var(--border-radius-sm);
   background: var(--bg-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .god-rank-number {
@@ -1035,25 +1043,36 @@ onMounted(() => {
   
   .header-stat {
     width: auto;
-    flex-shrink: 1;
+    flex-shrink: 0;
+    min-width: 50px;
   }
-  
+
   .player-stat {
     width: auto;
-    min-width: auto;
-    text-align: left;
-    flex-shrink: 1;
+    min-width: 50px;
+    text-align: center;
+    flex-shrink: 0;
   }
-  
+
+  .god-ranking-header {
+    flex-direction: row;
+    flex-shrink: 0;
+    min-width: max-content;
+  }
+
   .god-ranking-item {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: var(--spacing-xs);
+    flex-shrink: 0;
+    min-width: max-content;
   }
-  
+
   .god-ranking-content {
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     max-height: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .stats-side,

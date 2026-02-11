@@ -1317,7 +1317,11 @@ onMounted(() => {
 .god-ranking-content {
   max-height: 400px;
   overflow-y: auto;
+  overflow-x: auto;
   padding-right: var(--spacing-xs);
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 }
 
 .god-ranking-content::-webkit-scrollbar {
@@ -1338,6 +1342,8 @@ onMounted(() => {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   border: 1px solid var(--border-light);
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .header-avatar {
@@ -1380,6 +1386,8 @@ onMounted(() => {
   border-radius: var(--border-radius-sm);
   background: var(--bg-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  min-width: max-content;
 }
 
 .god-rank-number {
@@ -1503,60 +1511,68 @@ onMounted(() => {
   }
   
   .ranking-item {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: var(--spacing-xs);
   }
   
   .god-ranking-header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: var(--spacing-xs);
+    flex-shrink: 0;
+    min-width: max-content;
   }
   
   .header-avatar,
   .player-avatar-cell {
-    width: auto;
+    width: 32px;
+    flex-shrink: 0;
   }
   
   .header-player {
-    width: 100%;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    padding-left: 0;
+    width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 8px;
+    flex-shrink: 0;
   }
   
   .player-name {
-    width: 100%;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-    padding-left: 0;
+    width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
   }
   
   .header-stat {
-    width: auto;
-    flex-shrink: 1;
+    width: 50px;
+    text-align: center;
+    flex-shrink: 0;
   }
   
   .player-stat {
-    width: auto;
-    min-width: auto;
-    text-align: left;
-    flex-shrink: 1;
+    width: 50px;
+    text-align: center;
+    flex-shrink: 0;
   }
   
   .god-ranking-item {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: var(--spacing-xs);
+    flex-shrink: 0;
+    min-width: max-content;
   }
   
   .god-ranking-content {
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     max-height: auto;
     padding-right: var(--spacing-md);
+    -webkit-overflow-scrolling: touch;
   }
 }
 </style>
