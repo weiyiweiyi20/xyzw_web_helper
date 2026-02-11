@@ -856,6 +856,8 @@ onMounted(() => {
   overflow: auto;
   padding-right: var(--spacing-xs);
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 }
 
 .god-ranking-content::-webkit-scrollbar {
