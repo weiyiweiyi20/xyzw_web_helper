@@ -261,6 +261,29 @@ onMounted(() => {
     gap: var(--spacing-md);
   }
 
+  .club-info :deep(.n-tabs-nav) {
+    @media (max-width: 768px) {
+      padding: 0 !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  .club-info :deep(.n-tabs-nav--line) {
+    @media (max-width: 768px) {
+      padding: 0 !important;
+    }
+  }
+
+  .club-info :deep(.n-tabs-tab) {
+    @media (max-width: 768px) {
+      padding: 10px 14px !important;
+      min-width: 70px !important;
+      white-space: nowrap;
+      font-size: 12px !important;
+    }
+  }
+
   @media (max-width: 768px) {
     .grid {
       grid-template-columns: repeat(2, 1fr);
@@ -277,30 +300,6 @@ onMounted(() => {
       width: 100%;
       justify-content: space-between;
       font-size: 12px;
-    }
-
-    // 移动端标签页优化
-    :deep(.n-tabs) {
-      .n-tabs-nav {
-        padding: 0 !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-
-        .n-tabs-nav--line {
-          padding: 0 !important;
-        }
-
-        .n-tabs-tab {
-          padding: 10px 14px !important;
-          min-width: 70px !important;
-          white-space: nowrap;
-          font-size: 12px !important;
-        }
-      }
-
-      .n-tabs-pane {
-        padding: 12px 0 !important;
-      }
     }
   }
 
