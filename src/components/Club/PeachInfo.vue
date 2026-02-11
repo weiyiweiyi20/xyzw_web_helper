@@ -262,6 +262,16 @@ onMounted(() => {
   }
 
   @media (max-width: 768px) {
+    .overview {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-sm);
+    }
+
     .club-info :deep(.n-tabs) {
       width: 100%;
     }
@@ -293,25 +303,6 @@ onMounted(() => {
       overflow-x: auto !important;
       overflow-y: hidden !important;
       -webkit-overflow-scrolling: touch;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-sm);
-    }
-
-    .member-row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-
-    .member-row .right {
-      width: 100%;
-      justify-content: space-between;
-      font-size: 12px;
     }
   }
 

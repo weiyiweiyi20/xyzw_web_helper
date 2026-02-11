@@ -644,6 +644,48 @@ const formatNumber = (num) => {
   }
 
   @media (max-width: 768px) {
+    .overview,
+    .members,
+    .overview-actions {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-sm);
+    }
+
+    .member-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .member-row .left {
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .member-row .right {
+      width: 100%;
+      justify-content: space-between;
+      font-size: 12px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .member-row .right > * {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .club-info :deep(.n-tabs) {
       width: 100%;
     }
@@ -675,25 +717,6 @@ const formatNumber = (num) => {
       overflow-x: auto !important;
       overflow-y: hidden !important;
       -webkit-overflow-scrolling: touch;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-sm);
-    }
-
-    .member-row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-    }
-
-    .member-row .right {
-      width: 100%;
-      justify-content: space-between;
-      font-size: 12px;
     }
   }
 
