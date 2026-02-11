@@ -634,6 +634,26 @@ onUnmounted(() => {
   grid-column: 1 / -1;
   border-bottom: 1px solid var(--border-light);
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 768px) {
+    :deep(.n-tabs-nav) {
+      padding: 0 !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+
+      .n-tabs-nav--line {
+        padding: 0 !important;
+      }
+
+      .n-tabs-tab {
+        padding: 10px 14px !important;
+        min-width: 70px !important;
+        white-space: nowrap;
+        font-size: 12px !important;
+      }
+    }
+  }
 }
 
 .section-tabs :deep(.n-tabs-pane-wrapper) {
