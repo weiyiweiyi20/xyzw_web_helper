@@ -1007,15 +1007,53 @@ onMounted(() => {
     gap: var(--spacing-xs);
   }
   
+  .god-ranking-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .header-avatar,
+  .player-avatar-cell {
+    width: auto;
+  }
+  
+  .header-player {
+    width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    padding-left: 0;
+  }
+  
+  .player-name {
+    width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  
+  .header-stat {
+    width: auto;
+    flex-shrink: 1;
+  }
+  
+  .player-stat {
+    width: auto;
+    min-width: auto;
+    text-align: left;
+    flex-shrink: 1;
+  }
+  
   .god-ranking-item {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
   
-  .player-stat {
-    min-width: auto;
-    text-align: left;
+  .god-ranking-content {
+    overflow-x: hidden;
+    max-height: auto;
   }
   
   .stats-side,
