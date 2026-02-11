@@ -1013,6 +1013,10 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .god-rankings {
+    grid-template-columns: 1fr;
+  }
+
   .inline-header {
     flex-direction: column;
     align-items: flex-start;
