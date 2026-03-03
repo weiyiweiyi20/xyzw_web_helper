@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/weixin/:match*",
+      "destination": "/api/proxy?path=weixin/:match*"
+    },
+    {
+      "source": "/api/weixin-long/:match*",
+      "destination": "/api/proxy?path=weixin-long/:match*"
+    },
+    {
+      "source": "/api/hortor/:match*",
+      "destination": "/api/proxy?path=hortor/:match*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
