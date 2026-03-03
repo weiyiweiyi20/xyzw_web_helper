@@ -1,0 +1,85 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/weixin/:path*",
+      "destination": "https://open.weixin.qq.com/:path*"
+    },
+    {
+      "source": "/api/weixin-long/:path*",
+      "destination": "https://long.open.weixin.qq.com/:path*"
+    },
+    {
+      "source": "/api/hortor/:path*",
+      "destination": "https://comb-platform.hortorgames.com/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/weixin/:path*",
+      "headers": [
+        {
+          "key": "User-Agent",
+          "value": "Mozilla/5.0 (Linux; Android 7.0; Mi-4c Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.6.1.1220(0x26060135) NetType/WIFI Language/zh_CN"
+        },
+        {
+          "key": "Accept",
+          "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+        },
+        {
+          "key": "Referer",
+          "value": "https://open.weixin.qq.com/"
+        }
+      ]
+    },
+    {
+      "source": "/api/weixin-long/:path*",
+      "headers": [
+        {
+          "key": "User-Agent",
+          "value": "Mozilla/5.0 (Linux; Android 7.0; Mi-4c Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.6.1.1220(0x26060135) NetType/WIFI Language/zh_CN"
+        },
+        {
+          "key": "Accept",
+          "value": "*/*"
+        },
+        {
+          "key": "Referer",
+          "value": "https://open.weixin.qq.com/"
+        }
+      ]
+    },
+    {
+      "source": "/api/hortor/:path*",
+      "headers": [
+        {
+          "key": "User-Agent",
+          "value": "Mozilla/5.0 (Linux; Android 12; 23117RK66C Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36"
+        },
+        {
+          "key": "Accept",
+          "value": "*/*"
+        },
+        {
+          "key": "Host",
+          "value": "comb-platform.hortorgames.com"
+        },
+        {
+          "key": "Connection",
+          "value": "keep-alive"
+        },
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Origin",
+          "value": "https://open.weixin.qq.com"
+        },
+        {
+          "key": "Referer",
+          "value": "https://open.weixin.qq.com/"
+        }
+      ]
+    }
+  ]
+}
