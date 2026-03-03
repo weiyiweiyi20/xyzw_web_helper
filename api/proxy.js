@@ -1,3 +1,26 @@
+// Helper function to read request body from stream
+async function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    let chunks = [];
+
+    req.on('data', (chunk) => {
+      chunks.push(chunk);
+      body += chunk.toString();
+    });
+
+    req.on('end', () => {
+      console.log('[Proxy] Body stream ended, total size:', Buffer.concat(chunks).length);
+      resolve(Buffer.concat(chunks));
+    });
+
+    req.on('error', (err) => {
+      console.error('[Proxy] Error reading request body:', err);
+      reject(err);
+    });
+  });
+}
+
 export default async function handler(req, res) {
   // Log incoming request
   console.log('[Proxy] Incoming request:', {
@@ -5,7 +28,7 @@ export default async function handler(req, res) {
     method: req.method,
     contentType: req.headers['content-type'],
     contentLength: req.headers['content-length'],
-    headers: Object.keys(req.headers),
+    hasBody: !!req.body,
   });
 
   // Get the original path from either URL or query string
@@ -76,31 +99,24 @@ export default async function handler(req, res) {
       headers,
     };
 
-    // Handle request body - preserve raw format
+    // Read request body from stream for POST/PUT/PATCH
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      if (req.body) {
-        // If body is a Buffer or Uint8Array, send as-is
-        if (Buffer.isBuffer(req.body)) {
-          fetchOptions.body = req.body;
-        } else if (typeof req.body === 'string') {
-          fetchOptions.body = req.body;
-        } else if (req.body instanceof Uint8Array) {
-          fetchOptions.body = req.body;
+      try {
+        const bodyBuffer = await readRequestBody(req);
+        
+        if (bodyBuffer && bodyBuffer.length > 0) {
+          fetchOptions.body = bodyBuffer;
+          console.log('[Proxy] Request body captured:', {
+            size: bodyBuffer.length,
+            contentType: headers['content-type'],
+            preview: bodyBuffer.toString().substring(0, 100),
+          });
         } else {
-          // For objects, stringify only if content-type is application/json
-          if (headers['content-type']?.includes('application/json')) {
-            fetchOptions.body = JSON.stringify(req.body);
-          } else {
-            // Try to preserve form data or other formats
-            fetchOptions.body = req.body instanceof Object ? JSON.stringify(req.body) : String(req.body);
-          }
+          console.log('[Proxy] No request body received');
         }
-        console.log('[Proxy] Request body:', {
-          type: typeof req.body,
-          isBuffer: Buffer.isBuffer(req.body),
-          size: Buffer.byteLength(fetchOptions.body || ''),
-          contentType: headers['content-type'],
-        });
+      } catch (bodyError) {
+        console.error('[Proxy] Failed to read request body:', bodyError.message);
+        return res.status(400).json({ error: 'Failed to read request body' });
       }
     }
 
