@@ -2,8 +2,9 @@ export default async function handler(req, res) {
   // Log incoming request
   console.log('[Proxy] Incoming request:', {
     url: req.url,
-    originalUrl: req.originalUrl,
     method: req.method,
+    contentType: req.headers['content-type'],
+    contentLength: req.headers['content-length'],
     headers: Object.keys(req.headers),
   });
 
@@ -30,33 +31,44 @@ export default async function handler(req, res) {
 
   let targetUrl;
   let headers = { ...req.headers };
-  delete headers.host;
+  
+  // Remove headers that should not be forwarded or will be auto-calculated
+  const excludeHeaders = [
+    'host',
+    'connection',
+    'content-length',
+    'transfer-encoding',
+    'accept-encoding',
+    'authorization', // Will be re-added if present
+  ];
+  excludeHeaders.forEach(h => delete headers[h]);
 
   if (apiType === 'weixin-long') {
     targetUrl = `https://long.open.weixin.qq.com/${apiPath}${queryString}`;
-    headers['User-Agent'] = 'Mozilla/5.0 (Linux; Android 7.0; Mi-4c Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.6.1.1220(0x26060135) NetType/WIFI Language/zh_CN';
-    headers['Accept'] = '*/*';
-    headers['Referer'] = 'https://open.weixin.qq.com/';
+    headers['user-agent'] = 'Mozilla/5.0 (Linux; Android 7.0; Mi-4c Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.6.1.1220(0x26060135) NetType/WIFI Language/zh_CN';
+    headers['accept'] = '*/*';
+    headers['referer'] = 'https://open.weixin.qq.com/';
   } else if (apiType === 'weixin') {
     targetUrl = `https://open.weixin.qq.com/${apiPath}${queryString}`;
-    headers['User-Agent'] = 'Mozilla/5.0 (Linux; Android 7.0; Mi-4c Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.6.1.1220(0x26060135) NetType/WIFI Language/zh_CN';
-    headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8';
-    headers['Referer'] = 'https://open.weixin.qq.com/';
+    headers['user-agent'] = 'Mozilla/5.0 (Linux; Android 7.0; Mi-4c Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/53.0.2785.49 Mobile MQQBrowser/6.2 TBS/043632 Safari/537.36 MicroMessenger/6.6.1.1220(0x26060135) NetType/WIFI Language/zh_CN';
+    headers['accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8';
+    headers['referer'] = 'https://open.weixin.qq.com/';
   } else if (apiType === 'hortor') {
     targetUrl = `https://comb-platform.hortorgames.com/${apiPath}${queryString}`;
-    headers['User-Agent'] = 'Mozilla/5.0 (Linux; Android 12; 23117RK66C Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36';
-    headers['Accept'] = '*/*';
-    headers['Host'] = 'comb-platform.hortorgames.com';
-    headers['Connection'] = 'keep-alive';
-    headers['Content-Type'] = 'text/plain; charset=utf-8';
-    headers['Origin'] = 'https://open.weixin.qq.com';
-    headers['Referer'] = 'https://open.weixin.qq.com/';
+    headers['user-agent'] = 'Mozilla/5.0 (Linux; Android 12; 23117RK66C Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/95.0.4638.74 Mobile Safari/537.36';
+    headers['accept'] = '*/*';
+    headers['host'] = 'comb-platform.hortorgames.com';
+    headers['connection'] = 'keep-alive';
+    headers['content-type'] = 'text/plain; charset=utf-8';
+    headers['origin'] = 'https://open.weixin.qq.com';
+    headers['referer'] = 'https://open.weixin.qq.com/';
   } else {
     console.log('[Proxy] Unknown API type:', apiType);
     return res.status(400).json({ error: 'Unknown API type', received: apiType });
   }
 
   console.log('[Proxy] Forwarding to:', targetUrl);
+  console.log('[Proxy] Request headers being sent:', headers);
 
   try {
     const fetchOptions = {
@@ -64,14 +76,31 @@ export default async function handler(req, res) {
       headers,
     };
 
-    // Handle request body
+    // Handle request body - preserve raw format
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       if (req.body) {
-        if (typeof req.body === 'string') {
+        // If body is a Buffer or Uint8Array, send as-is
+        if (Buffer.isBuffer(req.body)) {
+          fetchOptions.body = req.body;
+        } else if (typeof req.body === 'string') {
+          fetchOptions.body = req.body;
+        } else if (req.body instanceof Uint8Array) {
           fetchOptions.body = req.body;
         } else {
-          fetchOptions.body = JSON.stringify(req.body);
+          // For objects, stringify only if content-type is application/json
+          if (headers['content-type']?.includes('application/json')) {
+            fetchOptions.body = JSON.stringify(req.body);
+          } else {
+            // Try to preserve form data or other formats
+            fetchOptions.body = req.body instanceof Object ? JSON.stringify(req.body) : String(req.body);
+          }
         }
+        console.log('[Proxy] Request body:', {
+          type: typeof req.body,
+          isBuffer: Buffer.isBuffer(req.body),
+          size: Buffer.byteLength(fetchOptions.body || ''),
+          contentType: headers['content-type'],
+        });
       }
     }
 
@@ -86,9 +115,9 @@ export default async function handler(req, res) {
     });
 
     // Copy response headers
-    const excludeHeaders = ['content-encoding', 'transfer-encoding'];
+    const excludeResponseHeaders = ['content-encoding', 'transfer-encoding', 'connection'];
     response.headers.forEach((value, key) => {
-      if (!excludeHeaders.includes(key.toLowerCase())) {
+      if (!excludeResponseHeaders.includes(key.toLowerCase())) {
         res.setHeader(key, value);
       }
     });
