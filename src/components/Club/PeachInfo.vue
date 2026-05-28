@@ -1408,11 +1408,15 @@ const handleExportImage = async () => {
 
     // 5. 用html2canvas渲染DOM为Canvas
     const canvas = await html2canvas(exportDom.value, {
-      scale: 2, // 放大2倍，解决图片模糊问题
-      useCORS: true, // 允许跨域图片
-      backgroundColor: "#ffffff", // 避免透明背景
-      logging: false, // 关闭控制台日志
-      allowTaint: true, // 允许跨域图片污染画布
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      allowTaint: true,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: exportDom.value.scrollWidth,
+      windowHeight: exportDom.value.scrollHeight,
     });
 
     // 6. Canvas转图片链接并下载

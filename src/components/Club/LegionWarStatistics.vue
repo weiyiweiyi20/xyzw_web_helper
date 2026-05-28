@@ -195,7 +195,7 @@
           :pagination="false"
           size="small"
           :row-class-name="rowClassName"
-          :max-height="600"
+          :max-height="tableMaxHeight"
         >
           <template #empty>
             <div class="empty-state">
@@ -350,13 +350,18 @@ const exportImage = async () => {
 
   try {
     await nextTick();
-    // 等待一点时间确保渲染完成
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // 等待渲染完成（移动端需要更多时间）
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     const canvas = await html2canvas(element, {
       useCORS: true,
-      scale: 2, // Higher quality
+      scale: 2,
       backgroundColor: "#ffffff",
+      // 确保捕获完整滚动内容
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
     });
 
     const link = document.createElement("a");

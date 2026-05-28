@@ -468,6 +468,13 @@ setDarkTheme();
 - Theme preference persisted to localStorage
 - System theme detection on first visit
 
+## Development Workflow Rules
+
+### Bug Fix Documentation
+**每次修复 Bug 后，必须更新项目文档：**
+1. 在 `CHANGELOG.md` 中记录修复内容（版本号、问题描述、修复方案、受影响文件）
+2. 如果修复涉及新的开发规范或模式，在 `CLAUDE.md` 的 `Development Guidelines` 中添加相应规则
+
 ## Configuration Notes
 
 ### Vite Configuration

@@ -982,12 +982,16 @@ const handleExport1 = async () => {
 
     // 生成canvas并导出
     const canvas = await html2canvas(exportDom.value, {
-      scale: 2, // 放大2倍，解决图片模糊问题
-      useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
-      backgroundColor: "#ffffff", // 避免透明背景（默认透明）
-      logging: false, // 关闭控制台日志
-      allowTaint: true, // 允许跨域图片
-      taintTest: false, // 关闭跨域测试
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      allowTaint: true,
+      taintTest: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: exportDom.value.scrollWidth,
+      windowHeight: exportDom.value.scrollHeight,
     });
 
     // 恢复原始样式

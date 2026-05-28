@@ -430,12 +430,56 @@ const exportToImage = async () => {
     throw new Error('未找到要导出的DOM元素');
   }
 
+  // 保存原始样式并临时展开内容
+  const tableContainer = exportDom.value.querySelector('.n-data-table');
+  const originalStyles = [];
+
+  if (tableContainer) {
+    const scrollContainer = tableContainer.querySelector('.n-data-table-base-table-body');
+    if (scrollContainer) {
+      originalStyles.push({
+        element: scrollContainer,
+        height: scrollContainer.style.height,
+        overflow: scrollContainer.style.overflow
+      });
+      scrollContainer.style.height = "auto";
+      scrollContainer.style.overflow = "visible";
+    }
+    originalStyles.push({
+      element: tableContainer,
+      height: tableContainer.style.height,
+      overflow: tableContainer.style.overflow
+    });
+    tableContainer.style.height = "auto";
+  }
+
+  await nextTick();
+  await new Promise(resolve => setTimeout(resolve, 300));
+
   // 5. 用html2canvas渲染DOM为Canvas
   const canvas = await html2canvas(exportDom.value, {
-    scale: 2, // 放大2倍，解决图片模糊问题
-    useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
-    backgroundColor: '#ffffff', // 避免透明背景（默认透明）
-    logging: false // 关闭控制台日志
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: exportDom.value.scrollWidth,
+    windowHeight: exportDom.value.scrollHeight,
+  });
+
+  // 恢复原始样式
+  originalStyles.forEach(({ element, height, overflow }) => {
+    if (height) {
+      element.style.height = height;
+    } else {
+      element.style.removeProperty("height");
+    }
+    if (overflow) {
+      element.style.overflow = overflow;
+    } else {
+      element.style.removeProperty("overflow");
+    }
   });
 
   // 6. Canvas转图片链接并下载
