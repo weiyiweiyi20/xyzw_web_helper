@@ -823,7 +823,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from "vue";
+import { ref, computed, onMounted, reactive, nextTick } from "vue";
 import {
   useMessage,
   NDatePicker,
@@ -2209,33 +2209,52 @@ const exportToImage = async () => {
   const scrollTop = tableContainer ? tableContainer.scrollTop : 0;
 
   try {
-    // 临时调整表格容器高度，确保所有内容可见
+    // 保存原始样式并临时展开所有内容
+    const originalStyles = [];
+
+    // 处理 exportDom（.table-content）
+    originalStyles.push({
+      element: exportDom.value,
+      height: exportDom.value.style.height,
+      overflow: exportDom.value.style.overflow,
+    });
     exportDom.value.style.height = "auto";
     exportDom.value.style.overflow = "visible";
 
+    // 处理 table-container
     if (tableContainer) {
-      // 保存原始样式
-      tableContainer.dataset.originalHeight = tableContainer.style.height;
-      tableContainer.dataset.originalOverflow = tableContainer.style.overflow;
-
+      originalStyles.push({
+        element: tableContainer,
+        height: tableContainer.style.height,
+        overflow: tableContainer.style.overflow,
+      });
       tableContainer.style.height = "auto";
       tableContainer.style.overflow = "visible";
     }
 
-    // 等待DOM更新
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // 等待DOM更新（移动端需要更多时间）
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // 获取完整的滚动高度
+    const fullHeight = Math.max(
+      exportDom.value.scrollHeight,
+      tableContainer ? tableContainer.scrollHeight : 0,
+    );
 
     // 5. 用html2canvas渲染DOM为Canvas
     const canvas = await html2canvas(exportDom.value, {
-      scale: 2, // 放大2倍，解决图片模糊问题
-      useCORS: true, // 允许跨域图片（若DOM内有远程图片，需开启）
-      backgroundColor: "#ffffff", // 避免透明背景（默认透明）
-      logging: false, // 关闭控制台日志
-      height: exportDom.value.scrollHeight, // 确保捕获完整高度
-      width: exportDom.value.scrollWidth, // 确保捕获完整宽度
-      windowWidth: exportDom.value.scrollWidth, // 设置窗口宽度
-      windowHeight: exportDom.value.scrollHeight, // 设置窗口高度
-      allowTaint: true, // 允许跨域图片污染画布
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      height: fullHeight,
+      width: exportDom.value.scrollWidth,
+      windowWidth: exportDom.value.scrollWidth,
+      windowHeight: fullHeight,
+      allowTaint: true,
     });
 
     // 6. Canvas转图片链接并下载
@@ -2248,27 +2267,15 @@ const exportToImage = async () => {
     alert("导出图片失败，请重试");
   } finally {
     // 恢复原始样式
-    exportDom.value.style.removeProperty("height");
-    exportDom.value.style.removeProperty("overflow");
+    originalStyles.forEach(({ element, height, overflow }) => {
+      if (height) element.style.height = height;
+      else element.style.removeProperty("height");
+      if (overflow) element.style.overflow = overflow;
+      else element.style.removeProperty("overflow");
+    });
 
+    // 恢复滚动位置
     if (tableContainer) {
-      if (tableContainer.dataset.originalHeight) {
-        tableContainer.style.height = tableContainer.dataset.originalHeight;
-      } else {
-        tableContainer.style.removeProperty("height");
-      }
-
-      if (tableContainer.dataset.originalOverflow) {
-        tableContainer.style.overflow = tableContainer.dataset.originalOverflow;
-      } else {
-        tableContainer.style.removeProperty("overflow");
-      }
-
-      // 清理 dataset
-      delete tableContainer.dataset.originalHeight;
-      delete tableContainer.dataset.originalOverflow;
-
-      // 恢复滚动位置
       tableContainer.scrollTop = scrollTop;
     }
   }
