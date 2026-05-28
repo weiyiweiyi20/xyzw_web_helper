@@ -2203,44 +2203,41 @@ const exportToImage = async () => {
     return;
   }
 
-  // 获取 table-container
-  const tableContainer = exportDom.value.querySelector(".table-container");
   // 保存滚动位置
+  const tableContainer = exportDom.value.querySelector(".table-container");
   const scrollTop = tableContainer ? tableContainer.scrollTop : 0;
 
   try {
-    // 保存原始样式并临时展开所有内容
+    // 保存原始样式并临时展开所有容器
     const originalStyles = [];
 
-    // 处理 exportDom（.table-content）
-    originalStyles.push({
-      element: exportDom.value,
-      height: exportDom.value.style.height,
-      overflow: exportDom.value.style.overflow,
-    });
-    exportDom.value.style.height = "auto";
-    exportDom.value.style.overflow = "visible";
+    // 需要处理的容器链：club-warrank-container → club-warrank-card → table-content → table-container
+    const containers = [
+      exportDom.value.closest(".club-warrank-container"),
+      exportDom.value.closest(".club-warrank-card"),
+      exportDom.value,
+      tableContainer,
+    ].filter(Boolean);
 
-    // 处理 table-container
-    if (tableContainer) {
+    containers.forEach((el) => {
       originalStyles.push({
-        element: tableContainer,
-        height: tableContainer.style.height,
-        overflow: tableContainer.style.overflow,
+        element: el,
+        height: el.style.height,
+        overflow: el.style.overflow,
       });
-      tableContainer.style.height = "auto";
-      tableContainer.style.overflow = "visible";
-    }
+      el.style.height = "auto";
+      el.style.overflow = "visible";
+    });
 
     // 等待DOM更新（移动端需要更多时间）
     await nextTick();
     await new Promise((resolve) => setTimeout(resolve, 300));
 
     // 获取完整的滚动高度
-    const fullHeight = Math.max(
-      exportDom.value.scrollHeight,
-      tableContainer ? tableContainer.scrollHeight : 0,
-    );
+    let fullHeight = 0;
+    containers.forEach((el) => {
+      fullHeight = Math.max(fullHeight, el.scrollHeight);
+    });
 
     // 5. 用html2canvas渲染DOM为Canvas
     const canvas = await html2canvas(exportDom.value, {
