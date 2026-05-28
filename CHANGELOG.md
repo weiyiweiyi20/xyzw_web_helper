@@ -7,6 +7,10 @@
   - 修复移动端导出时外层容器 `height:100%` 和 `overflow:hidden` 导致内容截断
   - 处理完整容器链，确保所有父容器的高度和溢出约束被临时移除
   - 影响组件：`ClubWarrank.vue`、`ClubMonthBattleRecords.vue`、`ClubBattleRecords.vue`、`PeachBattleRecords.vue`
+- **修复蟠桃园信息页面移动端敌方信息空白问题**
+  - 移动端表格需要固定最小高度才能正常渲染
+  - 添加移动端响应式样式：`min-height: 400px`、`flex: none`、`overflow: visible`
+  - 影响组件：`PeachInfo.vue`
 
 ## [2.0.0] - 2024-01-20
 

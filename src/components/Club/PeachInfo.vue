@@ -1467,6 +1467,11 @@ onMounted(() => {
   flex-direction: column;
   box-sizing: border-box;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    height: auto;
+    overflow: visible;
+  }
 }
 
 .toolbar {
@@ -2099,6 +2104,17 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .members-table {
+    min-height: 400px;
+    flex: none;
+    overflow: visible;
+  }
+
+  :deep(.n-data-table) {
+    height: auto;
+    max-height: none;
+  }
+
   .result-header {
     flex-direction: column;
     align-items: flex-start;
