@@ -475,6 +475,13 @@ setDarkTheme();
 1. 在 `CHANGELOG.md` 中记录修复内容（版本号、问题描述、修复方案、受影响文件）
 2. 如果修复涉及新的开发规范或模式，在 `CLAUDE.md` 的 `Development Guidelines` 中添加相应规则
 
+### Image Export Rules
+**导出图片时必须处理所有高度约束：**
+1. 检查元素链上所有父容器的 `overflow`、`max-height`、`height: 100%` 约束
+2. 使用 `nextTick()` + `setTimeout(300)` 确保移动端 DOM 完全更新
+3. 使用 `Math.max()` 获取所有可能的滚动高度
+4. `html2canvas` 配置必须包含 `scrollX/scrollY/windowWidth/windowHeight`
+
 ## Configuration Notes
 
 ### Vite Configuration
