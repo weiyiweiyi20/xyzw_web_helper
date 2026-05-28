@@ -72,7 +72,7 @@
     <!-- Data Table -->
     <div v-else-if="opponentMembers.length > 0" class="members-table">
       <div class="table-title">敌方信息</div>
-      <n-data-table :columns="columns" :data="opponentMembers" :bordered="false" size="small" striped flex-height />
+      <n-data-table :columns="columns" :data="opponentMembers" :bordered="false" size="small" striped :max-height="isMobile ? 600 : undefined" />
     </div>
 
     <!-- Empty State -->
@@ -432,6 +432,12 @@ const tokenStore = useTokenStore();
 const info = computed(() => tokenStore.gameData?.legionInfo || null);
 const club = computed(() => info.value?.info || null);
 const exportDom = ref(null);
+
+// 移动端检测
+const isMobile = ref(window.innerWidth <= 768);
+window.addEventListener('resize', () => {
+  isMobile.value = window.innerWidth <= 768;
+});
 
 const getLastSunday = () => {
   const today = new Date();
@@ -1598,9 +1604,13 @@ onMounted(() => {
   margin-top: 20px;
   flex: 1;
   overflow: hidden;
-  /* Use NDataTable's scroll or auto here */
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    flex: none;
+    overflow: visible;
+  }
 }
 
 .table-title {
@@ -1614,6 +1624,10 @@ onMounted(() => {
 
 :deep(.n-data-table) {
   height: 100%;
+
+  @media (max-width: 768px) {
+    height: auto;
+  }
 }
 
 :deep(.n-data-table .n-data-table-th) {
@@ -2104,17 +2118,6 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .members-table {
-    min-height: 400px;
-    flex: none;
-    overflow: visible;
-  }
-
-  :deep(.n-data-table) {
-    height: auto;
-    max-height: none;
-  }
-
   .result-header {
     flex-direction: column;
     align-items: flex-start;
