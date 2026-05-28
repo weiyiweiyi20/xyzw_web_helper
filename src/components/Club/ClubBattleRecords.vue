@@ -732,10 +732,28 @@ const exportToImage = async () => {
   }
 
   try {
-    // 临时移除战神榜内容区域的最大高度限制，确保所有内容都可见
-    const godRankingContents = exportDom.value.querySelectorAll('.god-ranking-content');
+    // 保存原始样式并临时展开所有容器
     const originalStyles = [];
-    
+
+    // 处理外层容器
+    const containers = [
+      exportDom.value.closest(".records-container"),
+      exportDom.value.closest(".battle-records-content"),
+      exportDom.value,
+    ].filter(Boolean);
+
+    containers.forEach((el) => {
+      originalStyles.push({
+        element: el,
+        height: el.style.height,
+        overflow: el.style.overflow,
+      });
+      el.style.height = "auto";
+      el.style.overflow = "visible";
+    });
+
+    // 处理战神榜内容区域
+    const godRankingContents = exportDom.value.querySelectorAll('.god-ranking-content');
     godRankingContents.forEach(content => {
       originalStyles.push({
         element: content,
@@ -746,7 +764,15 @@ const exportToImage = async () => {
       content.style.overflow = 'visible';
     });
 
-    // 5. 用html2canvas渲染DOM为Canvas
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    let fullHeight = 0;
+    containers.forEach((el) => {
+      fullHeight = Math.max(fullHeight, el.scrollHeight);
+    });
+
+    // 用html2canvas渲染DOM为Canvas
     const canvas = await html2canvas(exportDom.value, {
       scale: 2,
       useCORS: true,
@@ -754,17 +780,26 @@ const exportToImage = async () => {
       logging: false,
       scrollX: 0,
       scrollY: 0,
+      height: fullHeight,
+      width: exportDom.value.scrollWidth,
       windowWidth: exportDom.value.scrollWidth,
-      windowHeight: exportDom.value.scrollHeight,
+      windowHeight: fullHeight,
     });
 
-    // 恢复战神榜内容区域的原始样式
-    originalStyles.forEach(({ element, maxHeight, overflow }) => {
-      element.style.maxHeight = maxHeight;
-      element.style.overflow = overflow;
+    // 恢复原始样式
+    originalStyles.forEach(({ element, maxHeight, height, overflow }) => {
+      if (maxHeight !== undefined) {
+        element.style.maxHeight = maxHeight;
+      } else {
+        element.style.removeProperty("max-height");
+      }
+      if (height) element.style.height = height;
+      else element.style.removeProperty("height");
+      if (overflow) element.style.overflow = overflow;
+      else element.style.removeProperty("overflow");
     });
 
-    // 6. Canvas转图片链接并下载
+    // Canvas转图片链接并下载
     const filename = queryDate.value.replace("/",'年').replace("/",'月')+'日盐场战报.png';
     downloadCanvasAsImage(canvas, filename);
   } catch (err) {

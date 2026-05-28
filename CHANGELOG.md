@@ -4,12 +4,9 @@
 
 ### 🐛 Bug修复
 - **修复移动端图片导出截断问题**
-  - 修复盐场匹配信息详情导出时 `.table-content` 的 `overflow: hidden` 约束导致内容截断
-  - 修复盐场统计页面"全部战况"表格导出时 `max-height` 硬编码导致内容截断
-  - 修复赛车数据、怪异塔、月度战绩等页面导出时未处理表格高度限制
-  - 统一所有导出功能的 `html2canvas` 配置，添加 `scrollX/scrollY/windowWidth/windowHeight`
-  - 增加移动端渲染等待时间（100ms → 300ms）
-  - 影响组件：ClubWarrank、LegionWarStatistics、CarScoreInfo、ClubWeirdTowerInfo、ClubMonthBattleRecords、ClubBattleRecords、ClubHistoryRecords、ClubInfo、PeachInfo、PeachBattleRecords、FightPvp
+  - 修复移动端导出时外层容器 `height:100%` 和 `overflow:hidden` 导致内容截断
+  - 处理完整容器链，确保所有父容器的高度和溢出约束被临时移除
+  - 影响组件：`ClubWarrank.vue`、`ClubMonthBattleRecords.vue`、`ClubBattleRecords.vue`、`PeachBattleRecords.vue`
 
 ## [2.0.0] - 2024-01-20
 
