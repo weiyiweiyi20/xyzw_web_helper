@@ -70,9 +70,17 @@
     </div>
 
     <!-- Data Table -->
-    <div v-else-if="opponentMembers.length > 0" class="members-table" :style="isMobile ? { height: '400px', flex: 'none' } : {}">
+    <div v-else-if="opponentMembers.length > 0" class="members-table">
       <div class="table-title">敌方信息</div>
-      <n-data-table :columns="columns" :data="opponentMembers" :bordered="false" size="small" striped flex-height />
+      <n-data-table
+        :columns="columns"
+        :data="opponentMembers"
+        :bordered="false"
+        size="small"
+        striped
+        :flex-height="!isMobile"
+        :style="isMobile ? { height: '400px' } : {}"
+      />
     </div>
 
     <!-- Empty State -->
