@@ -1611,8 +1611,7 @@ onMounted(() => {
   flex-direction: column;
 
   @media (max-width: 768px) {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
   }
 }
 
@@ -1631,6 +1630,8 @@ onMounted(() => {
   @media (max-width: 768px) {
     height: 400px;
     min-width: 800px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
 
     .n-data-table-th,
     .n-data-table-td {
