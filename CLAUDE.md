@@ -482,6 +482,12 @@ setDarkTheme();
 3. 使用 `Math.max()` 获取所有可能的滚动高度
 4. `html2canvas` 配置必须包含 `scrollX/scrollY/windowWidth/windowHeight`
 
+### Mobile Table Scrolling
+**移动端 `n-data-table` 滚动注意事项：**
+- `flex-height` 在移动端会导致高度计算链断裂，表格不渲染
+- 移动端应使用独立容器统一处理双向滚动，避免内外两层滚动冲突
+- 表格列需设置 `white-space: nowrap` + `min-width` 防止自动换行
+
 ## Configuration Notes
 
 ### Vite Configuration
