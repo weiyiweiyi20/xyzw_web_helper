@@ -70,9 +70,9 @@
     </div>
 
     <!-- Data Table -->
-    <div v-else-if="opponentMembers.length > 0" class="members-table">
+    <div v-else-if="opponentMembers.length > 0" class="members-table" :style="isMobile ? { height: '400px', flex: 'none' } : {}">
       <div class="table-title">敌方信息</div>
-      <n-data-table :columns="columns" :data="opponentMembers" :bordered="false" size="small" striped :max-height="isMobile ? 600 : undefined" />
+      <n-data-table :columns="columns" :data="opponentMembers" :bordered="false" size="small" striped flex-height />
     </div>
 
     <!-- Empty State -->
@@ -1473,11 +1473,6 @@ onMounted(() => {
   flex-direction: column;
   box-sizing: border-box;
   overflow: hidden;
-
-  @media (max-width: 768px) {
-    height: auto;
-    overflow: visible;
-  }
 }
 
 .toolbar {
@@ -1606,11 +1601,6 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-
-  @media (max-width: 768px) {
-    flex: none;
-    overflow: visible;
-  }
 }
 
 .table-title {
@@ -1624,10 +1614,6 @@ onMounted(() => {
 
 :deep(.n-data-table) {
   height: 100%;
-
-  @media (max-width: 768px) {
-    height: auto;
-  }
 }
 
 :deep(.n-data-table .n-data-table-th) {
