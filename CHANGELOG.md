@@ -8,8 +8,8 @@
   - 处理完整容器链，确保所有父容器的高度和溢出约束被临时移除
   - 影响组件：`ClubWarrank.vue`、`ClubMonthBattleRecords.vue`、`ClubBattleRecords.vue`、`PeachBattleRecords.vue`
 - **修复蟠桃园信息页面移动端敌方信息空白问题**
-  - 移动端表格需要固定最小高度才能正常渲染
-  - 添加移动端响应式样式：`min-height: 400px`、`flex: none`、`overflow: visible`
+  - 根因：`n-data-table` 虚拟滚动容器高度依赖父元素空间，移动端计算为 0
+  - 修复：移动端通过 inline style 给 `.members-table` 设置固定高度 400px
   - 影响组件：`PeachInfo.vue`
 
 ## [2.0.0] - 2024-01-20
