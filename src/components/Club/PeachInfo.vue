@@ -1609,6 +1609,11 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .table-title {
@@ -1622,6 +1627,16 @@ onMounted(() => {
 
 :deep(.n-data-table) {
   height: 100%;
+
+  @media (max-width: 768px) {
+    height: auto;
+    min-width: 800px;
+
+    .n-data-table-th,
+    .n-data-table-td {
+      white-space: nowrap;
+    }
+  }
 }
 
 :deep(.n-data-table .n-data-table-th) {
