@@ -1629,7 +1629,7 @@ onMounted(() => {
   height: 100%;
 
   @media (max-width: 768px) {
-    height: auto;
+    height: 400px;
     min-width: 800px;
 
     .n-data-table-th,
