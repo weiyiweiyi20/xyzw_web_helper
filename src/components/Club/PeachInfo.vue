@@ -80,7 +80,6 @@
           size="small"
           striped
           :flex-height="!isMobile"
-          :style="isMobile ? { height: '400px', minWidth: '800px' } : {}"
         />
       </div>
     </div>
@@ -1618,7 +1617,8 @@ onMounted(() => {
   overflow: hidden;
 
   @media (max-width: 768px) {
-    overflow-x: auto;
+    height: 400px;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
 }
@@ -1636,7 +1636,8 @@ onMounted(() => {
   height: 100%;
 
   @media (max-width: 768px) {
-    height: 400px;
+    height: auto;
+    min-width: 800px;
 
     .n-data-table-th,
     .n-data-table-td {
