@@ -72,15 +72,17 @@
     <!-- Data Table -->
     <div v-else-if="opponentMembers.length > 0" class="members-table">
       <div class="table-title">敌方信息</div>
-      <n-data-table
-        :columns="columns"
-        :data="opponentMembers"
-        :bordered="false"
-        size="small"
-        striped
-        :flex-height="!isMobile"
-        :style="isMobile ? { height: '400px' } : {}"
-      />
+      <div class="table-scroll-wrapper">
+        <n-data-table
+          :columns="columns"
+          :data="opponentMembers"
+          :bordered="false"
+          size="small"
+          striped
+          :flex-height="!isMobile"
+          :style="isMobile ? { height: '400px', minWidth: '800px' } : {}"
+        />
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -1609,9 +1611,15 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.table-scroll-wrapper {
+  flex: 1;
+  overflow: hidden;
 
   @media (max-width: 768px) {
-    overflow: visible;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -1629,9 +1637,6 @@ onMounted(() => {
 
   @media (max-width: 768px) {
     height: 400px;
-    min-width: 800px;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
 
     .n-data-table-th,
     .n-data-table-td {
