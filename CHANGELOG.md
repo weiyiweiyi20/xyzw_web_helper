@@ -7,9 +7,10 @@
   - 修复移动端导出时外层容器 `height:100%` 和 `overflow:hidden` 导致内容截断
   - 处理完整容器链，确保所有父容器的高度和溢出约束被临时移除
   - 影响组件：`ClubWarrank.vue`、`ClubMonthBattleRecords.vue`、`ClubBattleRecords.vue`、`PeachBattleRecords.vue`
-- **修复蟠桃园信息页面移动端敌方信息空白问题**
-  - 根因：`n-data-table` 虚拟滚动容器高度依赖父元素空间，移动端计算为 0
-  - 修复：移动端通过 inline style 给 `.members-table` 设置固定高度 400px
+- **修复蟠桃园信息页面移动端敌方信息显示和滚动问题**
+  - 根因：`n-data-table` 的 `flex-height` 在移动端高度计算链断裂，导致表格不渲染
+  - 修复：移动端使用独立滚动容器 `.table-scroll-wrapper`（`height:400px` + `overflow:auto`）统一处理双向滚动，`n-data-table` 在移动端不设固定高度避免内部滚动冲突
+  - 移动端表格列不换行（`white-space:nowrap` + `min-width:800px`），支持左右拖拽
   - 影响组件：`PeachInfo.vue`
 
 ## [2.0.0] - 2024-01-20
