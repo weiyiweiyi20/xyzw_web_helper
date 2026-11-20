@@ -167,7 +167,7 @@ export async function loadDailyTaskConfig(
     { signal: AbortSignal.timeout(15000) },
     );
   if (!versionResponse.ok) throw new Error("官方任务配置版本读取失败");
-  const versionInfo = await version Response.json();
+  const versionInfo = await versionResponse.json();
   const version = versionInfo?.version;
   if (typeof version !== "string" || !/^[\w-]+$/.test(version))
     throw new Error("官方未提供有效的任务配置版本");
